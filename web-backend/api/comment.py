@@ -29,8 +29,8 @@ def post_comment(user=None):
         content = "@" + reply_to_user_name + "\n" + content
         # TODO: send notification
 
-    # Because when getting comments, we join on user.uuid, so we also need to
-    # save with user.uuid here
+    # Because when getting comments, we join on user.id, so we also need to
+    # save with user.id here
     db.session.add(Comment(url=url, content=content, user_id=user['id']))
     db.session.commit()
     return "success"
@@ -97,7 +97,7 @@ def get_comments(user=None):
     query_str = f"SELECT comment.id, comment.content, comment.user_id, comment.created_time,\
         user.id, user.name, user.has_avatar, SUM(vote.score) as score FROM comment \
         LEFT JOIN vote on vote.comment_id = comment.id \
-        LEFT JOIN user on comment.user_id = user.uuid \
+        LEFT JOIN user on comment.user_id = user.id \
         WHERE comment.url = '{url}' GROUP BY comment.id ORDER BY {orderBy} created_time DESC LIMIT {offset}, {limit}"
 
     res = db.engine.execute(text(query_str))

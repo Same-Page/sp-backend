@@ -9,7 +9,7 @@ class Danmu(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(500))
     created_time = Column(DateTime, default=datetime.datetime.utcnow)
-    uuid = Column(db.String(50), ForeignKey("user.uuid"))
+    user_id = Column(db.String(50), ForeignKey("user.id"))
     video_id = Column(db.String(50))
     sec = db.Column(db.Integer)
     type = db.Column(db.String(10))
@@ -20,7 +20,7 @@ class Danmu(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "user_id": self.uuid,
+            "user_id": self.user_id,
             "created": self.created_time,
             "content": self.content,
             "sec": self.sec,

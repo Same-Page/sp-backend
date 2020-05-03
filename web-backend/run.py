@@ -17,7 +17,6 @@ from api.room import room_api
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_POOL_SIZE'] = 50
     app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
     CORS(app)
     FLASK_CONFIG = {**SQLALCHEMY_CONFIG}

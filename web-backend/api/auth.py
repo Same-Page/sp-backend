@@ -1,5 +1,3 @@
-import uuid
-
 from flask import Blueprint, request, jsonify
 import bcrypt
 
@@ -49,7 +47,7 @@ def login():
     payload = request.get_json()
     user_id = payload["userId"]
     password = payload["password"]
-    auth = Auth.query.filter_by(user_num_id=user_id).first()
+    auth = Auth.query.filter_by(user_id=user_id).first()
     if not auth:
         return jsonify({"error": "账号不存在"}), 400
 
@@ -79,7 +77,7 @@ def reset_password(user=None):
     payload = request.get_json()
     new_password = payload["password"]
     new_hash = bcrypt.hashpw(new_password.encode("utf8"), bcrypt.gensalt(10))
-    Auth.query.filter_by(user_num_id=user['numId']).update(
+    Auth.query.filter_by(user_id=user['id']).update(
         {"password": new_hash})
     db.session.commit()
     return "success"
@@ -90,12 +88,11 @@ def register():
     payload = request.get_json()
     password = payload["password"]
     password_hash = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt(10))
-    user_uuid = uuid.uuid4().hex
-    user = User(uuid=user_uuid, name=get_rand_name())
+    user = User(name=get_rand_name())
     db.session.add(user)
     db.session.commit()
-    user.uuid = str(user.id)
-    auth = Auth(user_num_id=user.id, password=password_hash)
+
+    auth = Auth(user_id=user.id, password=password_hash)
     db.session.add(auth)
     db.session.commit()
 

@@ -84,7 +84,7 @@ def _get_messages(user, offset=0):
             conversation["messages"].append(msg_dict)
         else:
             conversations[other_id] = {"messages": [msg_dict]}
-    others = User.query.filter(User.uuid.in_(conversations.keys())).all()
+    others = User.query.filter(User.id.in_(conversations.keys())).all()
     for other in others:
         conversations[other.uuid]["user"] = other.to_dict()
 

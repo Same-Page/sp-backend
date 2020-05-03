@@ -39,11 +39,11 @@ def update_user(user=None):
     about = request.form.get("about")
     avatar = request.files.get("avatar")
 
-    u = User.query.filter_by(uuid=user['id']).first()
+    u = User.query.filter_by(id=user['id']).first()
 
     if avatar:
         u.has_avatar = u.has_avatar + 1
-        upload_file(avatar, f"{u.uuid}.jpg")
+        upload_file(avatar, f"{u.id}.jpg")
 
     u.name = name
     u.about = about
@@ -92,13 +92,13 @@ def _get_user(login_user, **kwarg):
     # should not be used to get self data
     # use account login to get self data
     user = User.query.filter_by(**kwarg).first()
-    follower_num = get_follower_count(user.uuid)
+    follower_num = get_follower_count(user.id)
     res = user.to_dict()
     res["followerCount"] = follower_num
     res["following"] = False
     if user:
         if (
-            Follow.query.filter_by(user_id=user.uuid)
+            Follow.query.filter_by(user_id=user.id)
             .filter_by(follower_id=login_user['id'])
             .filter_by(active=True)
             .first()

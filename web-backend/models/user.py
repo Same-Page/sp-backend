@@ -8,18 +8,16 @@ from cfg.urls import cloud_front
 class User(db.Model):
     __tablename__ = "user"
 
-    id = db.Column(db.Integer)
+    id = db.Column(db.Integer, primary_key=True)
     credit = db.Column(db.Integer, default=10)
-    uuid = db.Column(db.String(50), primary_key=True)
     name = db.Column(db.String(50), default="no name")
     about = db.Column(db.String(500))
     has_avatar = db.Column(db.Integer, default=0)
     role = db.Column(db.Integer, default=0)
-    block_until = Column(DateTime)
+    rooms = db.Column(db.String(100))
+    # block_until = Column(DateTime)
     create_time = Column(DateTime, default=datetime.datetime.utcnow)
-    last_checkin = Column(DateTime, default=datetime.datetime.utcnow)
-    room = db.Column(db.String(50))
-    mode = db.Column(db.String(20), default="site")
+    # last_checkin = Column(DateTime, default=datetime.datetime.utcnow)
 
     def __repr__(self):
         return "<User %r>" % self.id
@@ -28,7 +26,8 @@ class User(db.Model):
         return self.role >= 300
 
     def is_banned(self):
-        return self.block_until and datetime.datetime.now() < self.block_until
+        return False
+        # return self.block_until and datetime.datetime.now() < self.block_until
 
     def to_dict(self):
         if self.has_avatar:
@@ -37,15 +36,11 @@ class User(db.Model):
             avatar_id = self.id % 150
             avatar_src = f"{cloud_front}avatar/{avatar_id}.jpg"
         rooms = []
-        if self.room:
-            rooms = self.room.split(',')
+        if self.rooms:
+            rooms = self.rooms.split(',')
         return {
-            # From now on, uuid will be same as number id
-            # only return uuid to frontend
-            # frontend doesn't need to care about uuid vs number id
-            # there is just one id
-            "numId": self.id,
-            "id": self.uuid,
+
+            "id": self.id,
             "name": self.name,
             "credit": self.credit,
             "about": self.about,
@@ -53,6 +48,5 @@ class User(db.Model):
             "isMod": self.is_mod(),
             "isBanned": self.is_banned(),
             "avatarSrc": avatar_src,
-            "mode": self.mode,
             "rooms": rooms
         }

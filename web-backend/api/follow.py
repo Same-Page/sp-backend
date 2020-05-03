@@ -19,7 +19,7 @@ def get_followers(user=None):
     offset = request.args.get("offset", 0)
     followers = (
         db.session.query(User)
-        .join(Follow, Follow.follower_id == User.uuid)
+        .join(Follow, Follow.follower_id == User.id)
         .filter(Follow.user_id == user['id'], Follow.active == True)
         .offset(offset)
         .limit(20)
@@ -37,7 +37,7 @@ def get_followings(user=None):
     offset = request.args.get("offset", 0)
     followers = (
         db.session.query(User)
-        .join(Follow, Follow.user_id == User.uuid)
+        .join(Follow, Follow.user_id == User.id)
         .filter(Follow.follower_id == user['id'], Follow.active == True)
         .offset(offset)
         .limit(20)

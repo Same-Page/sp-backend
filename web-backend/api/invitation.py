@@ -25,8 +25,8 @@ def invite(user=None):
     if invitation_type == 'follower':
         followers = (
             db.session.query(User)
-            .join(Follow, Follow.follower_id == User.uuid)
-            .filter(Follow.user_id == user.uuid, Follow.active == True)
+            .join(Follow, Follow.follower_id == User.id)
+            .filter(Follow.user_id == user.id, Follow.active == True)
             .limit(1000)
             # TODO: order by last active time
         )
