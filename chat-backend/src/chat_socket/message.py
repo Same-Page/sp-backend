@@ -1,7 +1,7 @@
 import json
 import logging
 import uuid
-import time
+import datetime
 
 import copy
 
@@ -22,11 +22,10 @@ def save_msg(data, room_id):
             "user": sender,
             "content": content
         }
-    Remove roomId and roomType, add timestamp
+    Remove roomId and roomType, add created
     """
     del data['roomId']
     del data['roomType']
-    data['timestamp'] = int(time.time()*1000)
     chat_history = get_room_messages(room_id)
     chat_history.append(data)
     save_room_messages(room_id, chat_history)
@@ -62,19 +61,19 @@ def check_content_type(content, declared_type):
 
 def get_url_message(content):
     # Use bilibili iframe player
-    if 'bilibili.com/video/av' in content.lower():
-        aid = content.split('av')[1].split('/')[0].split('?')[0]
-        return {
-            'type': 'url',
-            'url': content,
-            'iframe_url': f'https://player.bilibili.com/player.html?aid={aid}&high_quality=1&danmaku=0',
-            'title': content
-        }
+    # if 'bilibili.com/video/av' in content.lower():
+    #     aid = content.split('av')[1].split('/')[0].split('?')[0]
+    #     return {
+    #         'type': 'url',
+    #         'value': content,
+    #         'iframe_url': f'https://player.bilibili.com/player.html?aid={aid}&high_quality=1&danmaku=0',
+    #         'title': content
+    #     }
     # normal url
     return {
         'type': 'url',
-        'url': content,
-        'title': content
+        'value': content,
+        'name': content
     }
 
 
@@ -87,7 +86,7 @@ def get_content(payload):
     declared_type = payload['type']
 
     if declared_type == 'text':
-        content = payload['text']
+        content = payload['value']
         # TODO: sanitize input
         analyzed_content_type = check_content_type(content, declared_type)
         if analyzed_content_type == 'url':
@@ -103,8 +102,8 @@ def get_content(payload):
         if analyzed_content_type == 'file':
             return {
                 "type": analyzed_content_type,
-                "url": payload['url'],
-                "fileName": payload['fileName']
+                "value": payload['url'],
+                "name": payload['fileName']
             }
         else:
             return {
@@ -120,9 +119,9 @@ def get_content(payload):
 
         return {
             "type": declared_type,
-            "url": url,
+            "value": url,
             "iframe_url": iframe_url,
-            "title": payload['title'],
+            "name": payload['title'],
         }
 
 
@@ -152,7 +151,9 @@ def lambda_handler(event, context):
             "roomId": room_id,
             "roomType": room_type,
             "user": sender,
-            "content": content
+            "content": content,
+            'created_at': datetime.datetime.utcnow().isoformat()
+
         }
         payload = {
             "name": "chat message",

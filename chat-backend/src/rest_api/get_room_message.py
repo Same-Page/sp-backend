@@ -9,7 +9,8 @@ def lambda_handler(event, context):
     res = get_room_messages(room_id)
     if timestamp:
         timestamp = int(timestamp)
-        res = [m for m in res if m['timestamp'] > timestamp]
+        # TO FIX: timestamp should be same format as created at
+        res = [m for m in res if m['created_at'] > timestamp]
     return {
         'statusCode': 200,
         'body': json.dumps(res),

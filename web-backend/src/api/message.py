@@ -30,22 +30,26 @@ def post_message(user=None):
     payload = request.get_json()
     receiver = payload["userId"]
     content = payload["content"]
-    offset = payload.get("offset", 0)
+    offset = payload.get("offset", -1)
+    value = content["value"]
+
     db.session.add(
-        Message(sender=user['id'], receiver=receiver, message=content))
+        Message(sender=user['id'], receiver=receiver, message=value))
     db.session.commit()
     return _get_messages(user, offset)
 
 
 def _get_messages(user, offset=0):
     """
-    Return a dictionary of conversations
-    {
-        uuid: {
+    Return a list of conversations,
+    sorted by time of latest message of each conversation
+    [
+        {
             user: {},
             messages: []
         },
-    }
+        ...
+    ]
     """
     messages = (
         Message.query.filter(
@@ -56,37 +60,51 @@ def _get_messages(user, offset=0):
         .all()
     )
 
+    # group the messages into conversation with other users
+    # conversations key is other's user id
     conversations = {}
 
     for msg in messages:
-        other_id = msg.receiver if msg.sender == user['id'] else msg.sender
+        # other_id = msg.receiver if msg.sender == user['id'] else msg.sender
         if msg.sender == user['id']:
             other_id = msg.receiver
             self_sent = True
         else:
             other_id = msg.sender
             self_sent = False
-        msg_dict = msg.to_dict()
-        msg_dict["self"] = self_sent
-        msg_dict["type"] = "text"
 
-        if msg.message.startswith("stickers/"):
-            msg_dict["type"] = "sticker"
-
-        elif is_pure_emoji(msg.message):
-            msg_dict["type"] = "emoji"
+        msg_dict = {
+            'id': msg.id,
+            # return a self flag rather than put user data
+            # on each message to save bandwidth
+            'self': self_sent,
+            'created_at': msg.created_at,
+            'content': {
+                'type': 'text',
+                'value': msg.message
+            }
+        }
+        # message type checking code below should be shared
+        # with chat server
+        if is_pure_emoji(msg.message):
+            msg_dict['content']['type'] = 'emoji'
 
         elif is_image(msg.message):
-            msg_dict["type"] = "image"
+            msg_dict['content']['type'] = 'image'
 
         if other_id in conversations:
             conversation = conversations[other_id]
             conversation["messages"].append(msg_dict)
         else:
             conversations[other_id] = {"messages": [msg_dict]}
+
     others = User.query.filter(User.id.in_(conversations.keys())).all()
     for other in others:
-        conversations[other.uuid]["user"] = other.to_dict()
+        conversations[other.id]["user"] = other.to_dict()
+
+    # Convert to array and sort by last message time
+    conversations = sorted(list(conversations.values(
+    )), key=lambda c: c['messages'][-1]['created_at'], reverse=True)
 
     return jsonify(conversations)
 

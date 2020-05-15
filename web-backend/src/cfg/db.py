@@ -28,11 +28,11 @@ else:
     # run will create the file in user's directory
     # all tables will be created
 
-    SQLITE_FILE_PATH = 'db/sp.db'
+    SQLITE_FILE_PATH = 'db/sqlite/sp.db'
     if not os.path.isfile(SQLITE_FILE_PATH):
         Path(SQLITE_FILE_PATH).touch()
         try:
-            qry = open('db/create_tables.sql', 'r').read()
+            qry = open('db/sqlite/create_tables.sql', 'r').read()
             conn = sqlite3.connect(SQLITE_FILE_PATH)
             c = conn.cursor()
             c.executescript(qry)

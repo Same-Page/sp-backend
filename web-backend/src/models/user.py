@@ -16,7 +16,7 @@ class User(db.Model):
     role = db.Column(db.Integer, default=0)
     rooms = db.Column(db.String(100))
     # block_until = Column(DateTime)
-    create_time = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     # last_checkin = Column(DateTime, default=datetime.datetime.utcnow)
 
     def __repr__(self):

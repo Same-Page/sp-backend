@@ -51,7 +51,15 @@ def login():
     if not auth:
         return jsonify({"error": "账号不存在"}), 400
 
-    if bcrypt.checkpw(password.encode("utf8"), auth.password.encode("utf8")):
+    correct_pwd = auth.password
+    try:
+        # Mysql db return string type
+        correct_pwd = correct_pwd.encode("utf8")
+    except:
+        print('password is byte type')
+        pass
+
+    if bcrypt.checkpw(password.encode("utf8"), correct_pwd):
         user = User.query.filter_by(id=user_id).first()
         # Check if banned
         if user.is_banned():
@@ -87,8 +95,9 @@ def reset_password(user=None):
 def register():
     payload = request.get_json()
     password = payload["password"]
+    name = payload.get("name") or get_rand_name()
     password_hash = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt(10))
-    user = User(name=get_rand_name())
+    user = User(name=name)
     db.session.add(user)
     db.session.commit()
 

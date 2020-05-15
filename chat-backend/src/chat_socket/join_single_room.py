@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 from boto3 import client as boto3_client
 import requests
@@ -49,7 +50,6 @@ def lambda_handler(event, context):
 
     if user:
         previous_joined_room_ids = []
-        newly_joined_rooms = {}
         connection = get_connection(connection_id)
         if connection:
             previous_joined_room_ids = connection['rooms']
@@ -57,9 +57,7 @@ def lambda_handler(event, context):
         room_info = join_room(
             connection_id, user, room['id'], room['type'], event)
         room_info['chatHistory'] = get_room_messages(room['id'])
-
-        newly_joined_rooms[room['id']] = room_info
-
+        room_info['roomId'] = room['id']
         # save connection - {'user':{}, 'rooms':[]}
         save_connection(connection_id, user,
                         list(set(previous_joined_room_ids+[room['id']])))
@@ -68,9 +66,10 @@ def lambda_handler(event, context):
         # save_user(connection_id, user['id'])
 
         # TODO: client shouldn't see other user's connections
+        time.sleep(1)
         res = {
             "name": "room info",
-            "data": newly_joined_rooms
+            "data": room_info
         }
 
         return {

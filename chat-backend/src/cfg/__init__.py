@@ -8,7 +8,7 @@ env = os.environ.get('sp_env', 'staging')
 print(f'NOTE: running env {env}')
 
 is_local = env.lower() == 'local'
-# is_local = True
+is_local = True
 
 API_URL = "https://api-v2.yiyechat.com"
 CHAT_SOCKET_DOMAIN = "chat-v6.yiyechat.com"
@@ -30,7 +30,7 @@ chat_history_client = redis.Redis.from_url(CHAT_HISTORY_REDIS_URL)
 if is_local:
 
     # REDIS_URL = CHAT_HISTORY_REDIS_URL = 'redis://0.0.0.0:6379'
-    # API_URL = "http://localhost:8080"
+    API_URL = "http://localhost:8080"
 
     local_cache = {}
 

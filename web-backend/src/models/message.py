@@ -11,7 +11,7 @@ class Message(db.Model):
     sender = db.Column(db.String(50))
     receiver = db.Column(db.String(50))
     message = db.Column(db.String(500))
-    create_time = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     def __repr__(self):
         return "<Message %r>" % self.id
@@ -22,5 +22,5 @@ class Message(db.Model):
             "from": self.sender,
             "to": self.receiver,
             "content": self.message,
-            "created": self.create_time,
+            "created_at": self.created_at,
         }

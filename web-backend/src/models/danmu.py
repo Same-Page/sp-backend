@@ -8,7 +8,7 @@ class Danmu(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(500))
-    created_time = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     user_id = Column(db.String(50), ForeignKey("user.id"))
     video_id = Column(db.String(50))
     sec = db.Column(db.Integer)
@@ -21,7 +21,7 @@ class Danmu(db.Model):
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "created": self.created_time,
+            "created_at": self.created_at,
             "content": self.content,
             "sec": self.sec,
             "type": self.type,

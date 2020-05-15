@@ -1,6 +1,6 @@
 import json
 import uuid
-import time
+import datetime
 
 from boto3 import client as boto3_client
 import boto3
@@ -36,7 +36,7 @@ def get_news_and_save_to_room():
                     "url": url,
                     "title": n.get('title')
                 },
-                "timestamp": int(time.time()*1000)
+                "created_at": datetime.datetime.utcnow().isoformat()
 
             }
             chat_history.append(item)

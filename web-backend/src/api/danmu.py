@@ -37,7 +37,7 @@ def get_latest_danmus(user=None):
                 "id": danmu.id,
                 "url": url,
                 "content": danmu.content,
-                "created": danmu.created_time,
+                "created_at": danmu.created_at,
                 "user": commenter.to_dict(),
                 "self": True if (user and str(commenter.id) == str(user['numId'])) else False,
             }
@@ -82,7 +82,7 @@ def get_video_danmus(video_id, user=None):
             {
                 "id": danmu.id,
                 "content": danmu.content,
-                "created": danmu.created_time,
+                "created_at": danmu.created_at,
                 "sec": danmu.sec,
                 "user": commenter.to_dict(),
                 "self": True if (user and str(commenter.id) == str(user['numId'])) else False,

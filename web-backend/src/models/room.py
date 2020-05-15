@@ -16,7 +16,7 @@ class Room(db.Model):
     owner = db.Column(db.Integer, ForeignKey("user.id"))
     name = db.Column(db.String(50))
     about = db.Column(db.String(1000))
-    create_time = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     active = db.Column(db.Boolean, default=True)
 
     background = db.Column(db.String(100))

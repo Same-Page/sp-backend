@@ -9,7 +9,7 @@ class Auth(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer)
     password = db.Column(db.String(60))
-    created = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     def __repr__(self):
         return "<Auth %r>" % self.id

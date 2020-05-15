@@ -10,8 +10,8 @@ class Follow(db.Model):
     user_id = db.Column(db.String(50))
     follower_id = db.Column(db.String(50))
     active = db.Column(db.Boolean)
-    create_time = Column(DateTime, default=datetime.datetime.utcnow)
-    update_time = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     def __repr__(self):
         return "<Follow %r>" % self.id
@@ -22,6 +22,6 @@ class Follow(db.Model):
             "userId": self.user_id,
             "followerId": self.follower_id,
             "active": self.active,
-            "created": self.create_time,
-            "updated": self.update_time,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
         }

@@ -1,8 +1,10 @@
+PRAGMA encoding = 'UTF-8';
+
 CREATE TABLE "auth" (
 	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
 	"password"	TEXT,
 	"user_id"	INTEGER,
-	"created"	INTEGER
+	"created_at"	INTEGER
 );
 
 
@@ -10,7 +12,7 @@ CREATE TABLE "user" (
 	"id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"name"	TEXT,
 	"about"	TEXT,
-	"create_time"	INTEGER,
+	"created_at"	INTEGER,
 	"credit"	INTEGER,
 	"has_avatar"	INTEGER,
 	"role"	INTEGER,
@@ -22,14 +24,31 @@ CREATE TABLE "message" (
 	"sender"	INTEGER,
 	"receiver"	INTEGER,
 	"message"	TEXT,
-	"create_time"	INTEGER
+	"created_at"	INTEGER
 );
+
+CREATE TABLE "comment" (
+	"id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	"user_id"	INTEGER,
+	"created_at"	INTEGER,
+	"content"	TEXT,
+	"url"	TEXT
+);
+
+
+CREATE TABLE "vote" (
+	"id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	"user_id"	INTEGER,
+	"comment_id"	INTEGER,
+	"score"	INTEGER
+);
+
 
 CREATE TABLE "follow" (
 	"id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"user_id"	INTEGER,
 	"follower_id"	INTEGER,
-	"create_time"	INTEGER,
-	"update_time"	INTEGER,
+	"created_at"	INTEGER,
+	"updated_at"	INTEGER,
 	"active"	INTEGER
 );

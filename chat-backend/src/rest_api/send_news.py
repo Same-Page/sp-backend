@@ -1,7 +1,7 @@
 from common import get_room, get_room_messages, save_room_messages, send_msg_to_room, chat_history_client
 import json
 import uuid
-import time
+import datetime
 
 from boto3 import client as boto3_client
 import boto3
@@ -104,11 +104,11 @@ def save_msg(data, room_id):
             "user": sender,
             "content": content
         }
-    Remove roomId and roomType, add timestamp
+    Remove roomId and roomType, add created_at
     """
     del data['roomId']
     del data['roomType']
-    data['timestamp'] = int(time.time()*1000)
+    data['created_at'] = datetime.datetime.utcnow().isoformat()
     chat_history = get_room_messages(room_id)
     chat_history.append(data)
     save_room_messages(room_id, chat_history)
