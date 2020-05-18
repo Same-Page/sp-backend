@@ -8,8 +8,8 @@ class Message(db.Model):
     __tablename__ = "message"
 
     id = db.Column(db.Integer, primary_key=True)
-    sender = db.Column(db.String(50))
-    receiver = db.Column(db.String(50))
+    sender = db.Column(db.Integer)
+    receiver = db.Column(db.Integer)
     message = db.Column(db.String(500))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

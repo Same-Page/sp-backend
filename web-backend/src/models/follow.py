@@ -7,8 +7,8 @@ class Follow(db.Model):
     __tablename__ = "follow"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(50))
-    follower_id = db.Column(db.String(50))
+    user_id = db.Column(db.Integer)
+    follower_id = db.Column(db.Integer)
     active = db.Column(db.Boolean)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)

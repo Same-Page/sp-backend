@@ -9,8 +9,8 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(500))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    user_id = Column(db.String(50), ForeignKey("user.id"))
-    url = db.Column(db.String(50))
+    user_id = Column(db.Integer, ForeignKey("user.id"))
+    url = db.Column(db.String(100))
 
     def __repr__(self):
         return "<Comment %r>" % self.id

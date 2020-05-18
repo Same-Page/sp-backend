@@ -9,7 +9,7 @@ class Vote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     comment_id = db.Column(db.Integer)
     score = db.Column(db.Integer)
-    user_id = db.Column(db.String(60))
+    user_id = db.Column(db.Integer)
 
     def __repr__(self):
         return "<Vote %r>" % self.id
