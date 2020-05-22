@@ -69,20 +69,16 @@ def get_user(token):
     return None
 
 
-def broadcast_user_left(event, room, user):
+def broadcast_user_left(room_id, user):
 
-    endpoint_url = 'https://' + \
-        event["requestContext"]["domainName"] + \
-        '/'+event["requestContext"]["stage"]
     payload = {
         'name': 'other left',
         'data': {
-            'roomId': room['id'],
-            'roomType': room['type'],
+            'roomId': room_id,
             'user': user
         }
     }
-    send_msg_to_room(endpoint_url, payload, room['id'])
+    send_msg_to_room(payload, room_id)
 
 
 def send_msg_to_room(payload, room_id, exclude_connection=[]):
@@ -117,12 +113,12 @@ def send_message_to_socket(connection_id, data):
 
     connection = connections.get(connection_id)
     if connection:
-        asyncio.create_task(connection.socket.send(json.dumps(data)))
+        connection.message(data)
     else:
         logging.warn(f'connection not exist {connection_id}')
 
 
-def delete_connection_from_rooms(event, connection_id, user, rooms):
+def delete_connection_from_rooms(connection_id, user, rooms):
     user_has_left = False
     for room_id in rooms:
         room = get_room(room_id)
@@ -149,7 +145,7 @@ def delete_connection_from_rooms(event, connection_id, user, rooms):
                     redis_client.set(room_id, json.dumps(room))
                     if user_has_left:
                         # broadcast user left
-                        broadcast_user_left(event, room, user)
+                        broadcast_user_left(room_id, user)
 
 
 # def send_msg_to_room(payload, room_id, exclude_connection=None):

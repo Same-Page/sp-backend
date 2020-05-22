@@ -119,15 +119,9 @@ def handle(connection, data):
     user = get_user(token)
     room_id = room['id']
     if user:
-        # previous_joined_room_ids = []
-        # connection = get_connection(connection_id)
-        # if connection:
-        #     previous_joined_room_ids = connection['rooms']
         connection.user = user
-        room_info = join_room(
-            connection, user, room_id)
-
-        connection.room_ids.append(room_id)
+        room_info = join_room(connection, user, room_id)
+        connection.join_room(room_id)
 
         room_info['chatHistory'] = get_room_messages(room_id)
         room_info['roomId'] = room_id

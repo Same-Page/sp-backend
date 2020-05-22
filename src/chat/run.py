@@ -7,9 +7,10 @@ import pathlib
 import ssl
 import websockets
 
-from handlers import join_single_room, message
+from handlers import join_single_room, message, leave_single_room
 # from chat_socket import set_rooms, message, join_single_room, leave_single_room, close, delete_message
-from connections import connections, Connection
+from connections import connections
+from connection import Connection
 # from cfg import CHAT_SOCKET_DOMAIN
 
 # when it's single server websocket, we can keep reference to each socket
@@ -30,8 +31,8 @@ def handle_event(connection, data):
         res = message.handle(connection, data)
     if action == 'join_single':
         res = join_single_room.handle(connection, data)
-    # if action == 'leave_single':
-    #     res = leave_single_room.lambda_handler(mock_event, None)['body']
+    if action == 'leave_single':
+        res = leave_single_room.handle(connection, data)
     # if action == 'delete_message':
     #     print('del')
     #     res = delete_message.lambda_handler(mock_event, None)['body']

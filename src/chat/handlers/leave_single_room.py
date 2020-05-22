@@ -10,62 +10,31 @@ from cfg import REDIS_URL, API_URL
 from common import get_user, get_room, get_connection, delete_connection_from_rooms, save_connection
 
 
-def lambda_handler(event, context):
+def handle(connection, data):
+    """
+    Remove connection from room
+    Remove room from connection
+    """
+    connection_id = connection.id
 
-    connection_id = event["requestContext"].get("connectionId")
-    data = json.loads(event['body'])['data']
-
-    room = data['room']
+    room_id = data['roomId']
     token = data.get('token')
-    user = get_user(token)
-
+    # user = get_user(token) # user is already on connection object
+    user = connection.user
     if user:
-        previous_joined_room_ids = []
-        connection = get_connection(connection_id)
-        if connection:
-            previous_joined_room_ids = connection['rooms']
 
-        delete_connection_from_rooms(
-            event, connection_id, user, [room['id']])
-        room_ids = [r_id
-                    for r_id in previous_joined_room_ids if r_id != room['id']]
-        # save connection - {'user':{}, 'rooms':[]}
-        save_connection(connection_id, user, room_ids)
-        # save user - {'connections':[]}
-        # save_user(connection_id, user['id'])
+        delete_connection_from_rooms(connection_id, user, [room_id])
 
-        # TODO: client shouldn't see other user's connections
-        res = {
+        connection.leave_room(room_id)
+        return {
             "name": "left room",
             "data": {
-                "roomId": room['id']
+                "roomId": room_id
             }
         }
 
-        return {
-            'statusCode': 200,
-            'body': json.dumps(res)
-        }
     else:
         return {
-            'statusCode': 400,
-            'body': json.dumps('not logged in!')
+            'error': 'not logged in'
+
         }
-
-
-payload = {
-    "action": "join",
-    "data": {
-        "url": 'https://zhhu.com'
-    }
-}
-event = {
-    "requestContext": {
-        "domainName": "7dvmt9p591.execute-api.ap-southeast-1.amazonaws.com",
-        "stage": "prod",
-        "connectionId": 'a'
-    },
-    "body": json.dumps(payload)
-}
-if __name__ == "__main__":
-    print(lambda_handler(event, None))
