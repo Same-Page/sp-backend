@@ -203,7 +203,9 @@ def send_msg_to_room(payload, room_id, exclude_connection=[]):
 
 def send_message_to_socket(connection_id, data):
     print(f'send_message_to_socket {connection_id}')
+
     socket = sockets.get(connection_id)
     if socket:
-
         asyncio.create_task(socket.send(json.dumps(data)))
+    else:
+        logging.warn(f'connection not exist {connection_id}')
