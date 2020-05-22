@@ -12,6 +12,9 @@ from boto3 import client as boto3_client
 from common import get_user, get_room, get_room_messages, save_room_messages
 from sockets import sockets
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def save_msg(data, room_id):
     data = copy.deepcopy(data)
@@ -144,11 +147,9 @@ def handle(connection_id, data):
         # sometimes sender's connection isn't in the room
         # add it to room first? Better to fix the source of bug then patching here..
 
-        # room_type = room['type']
         chat_message = {
             "id": message_id,
             "roomId": room_id,
-            # "roomType": room_type,
             "user": sender,
             "content": content,
             'created_at': datetime.datetime.utcnow().isoformat()
@@ -158,6 +159,8 @@ def handle(connection_id, data):
             "name": "chat message",
             "data": chat_message
         }
+
+        logger.info(f"[{room['id']}] {sender['name']}: {content['value']}")
 
         # Shouldn't need this, when room message is updated, it should
         # trigger event automatically
@@ -192,7 +195,7 @@ def send_msg_to_room(payload, room_id, exclude_connection=[]):
                 # some connections are dropped without notice, they raise
                 # exception here, we should remove these dead connections
                 dead_connections.append(connection_id)
-                logging.exception(
+                logger.exception(
                     f'Room [{room_id}] failed to send message to connection {connection_id}')
 
         # clean_dead_connections(room_id, user['id'], dead_connections)

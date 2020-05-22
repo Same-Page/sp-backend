@@ -162,7 +162,7 @@ def build_room_user_from_user_data(user):
     return new_user
 
 
-def join_room(connection_id, user, room_id, room_type):
+def join_room(connection_id, user, room_id):
 
     # check if room already exists
     # check if connection already joined this room
@@ -201,7 +201,6 @@ def join_room(connection_id, user, room_id, room_type):
         new_user['connections'].append(connection_id)
         room = {
             'id': room_id,
-            'type': room_type,  # why need this?
             'users': [new_user]
         }
         upsert_room(room)

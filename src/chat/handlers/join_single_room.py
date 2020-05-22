@@ -54,7 +54,7 @@ def handle(connection_id, data):
         #     previous_joined_room_ids = connection['rooms']
 
         room_info = join_room(
-            connection_id, user, room['id'], room['type'])
+            connection_id, user, room['id'])
         room_info['chatHistory'] = get_room_messages(room['id'])
         room_info['roomId'] = room['id']
 
