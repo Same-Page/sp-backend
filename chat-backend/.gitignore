@@ -1,9 +1,0 @@
-
-.DS_Store
-.vscode/*
-*.pyc
-src/dump.rdb
-
-function.zip
-packages/*
-function/*
