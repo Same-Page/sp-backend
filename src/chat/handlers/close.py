@@ -26,8 +26,10 @@ def _delete_connection_from_connections(connection_id):
         return connection
 
 
-def lambda_handler(event, context):
-    connection_id = event["requestContext"].get("connectionId")
+def handler(connection_id):
+
+    delete_connection_from_rooms(event, connection_id, user, rooms)
+
     connection = _delete_connection_from_connections(connection_id)
     if connection:
         user = connection['user']

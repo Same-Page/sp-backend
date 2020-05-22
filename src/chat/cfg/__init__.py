@@ -1,8 +1,10 @@
 import os
+import logging
 from unittest.mock import MagicMock
 
 import redis
 
+logging.basicConfig(level=logging.INFO)
 
 env = os.environ.get('sp_env', 'staging')
 print(f'NOTE: running env {env}')

@@ -9,10 +9,9 @@ import asyncio
 import boto3
 from boto3 import client as boto3_client
 
-from common import get_user, get_room, get_room_messages, save_room_messages
-from sockets import sockets
+from common import get_user, get_room, get_room_messages, save_room_messages, send_msg_to_room
 
-logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 
@@ -128,7 +127,7 @@ def get_content(payload):
         }
 
 
-def handle(connection_id, data):
+def handle(connection, data):
     """
     Client tell room id,
     broadcast to that room
@@ -165,47 +164,10 @@ def handle(connection_id, data):
         # Shouldn't need this, when room message is updated, it should
         # trigger event automatically
         send_msg_to_room(payload, room_id,
-                         exclude_connection=connection_id)
+                         exclude_connection=connection.id)
         save_msg(chat_message, room_id)
         return payload
 
     return {
         'error': 'no room'
     }
-
-
-def send_msg_to_room(payload, room_id, exclude_connection=[]):
-    # Shouldn't need this, when room message is updated, it should
-    # trigger event automatically
-
-    room = get_room(room_id)
-    users = room['users']
-    for user in users:
-        dead_connections = []
-
-        for connection_id in user['connections']:
-            if exclude_connection == connection_id:
-                continue
-            try:
-                # Note: the local shim is not very accurate
-                # exception or result won't be returned here if happened
-                # in coroutine
-                send_message_to_socket(connection_id, payload)
-            except Exception as e:
-                # some connections are dropped without notice, they raise
-                # exception here, we should remove these dead connections
-                dead_connections.append(connection_id)
-                logger.exception(
-                    f'Room [{room_id}] failed to send message to connection {connection_id}')
-
-        # clean_dead_connections(room_id, user['id'], dead_connections)
-
-
-def send_message_to_socket(connection_id, data):
-    print(f'send_message_to_socket {connection_id}')
-
-    socket = sockets.get(connection_id)
-    if socket:
-        asyncio.create_task(socket.send(json.dumps(data)))
-    else:
-        logging.warn(f'connection not exist {connection_id}')

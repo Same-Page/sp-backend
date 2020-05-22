@@ -1,10 +1,16 @@
 import json
 import logging
+import asyncio
 
 import requests
 from boto3 import client as boto3_client
 
-from cfg import is_local, redis_client, chat_history_client, API_URL, CHAT_HISTORY_REDIS_URL, MAX_ROOM_HISTORY, MAX_USER_CONNECTION
+from cfg import is_local, redis_client, chat_history_client,\
+    API_URL, CHAT_HISTORY_REDIS_URL, MAX_ROOM_HISTORY, MAX_USER_CONNECTION
+
+from connections import connections
+
+logger = logging.getLogger(__name__)
 
 
 def get_connection(connection_id):
@@ -79,6 +85,43 @@ def broadcast_user_left(event, room, user):
     send_msg_to_room(endpoint_url, payload, room['id'])
 
 
+def send_msg_to_room(payload, room_id, exclude_connection=[]):
+    # Shouldn't need this, when room message is updated, it should
+    # trigger event automatically
+
+    room = get_room(room_id)
+    users = room['users']
+    for user in users:
+        dead_connections = []
+
+        for connection_id in user['connections']:
+            if exclude_connection == connection_id:
+                continue
+            try:
+                # Note: the local shim is not very accurate
+                # exception or result won't be returned here if happened
+                # in coroutine
+                send_message_to_socket(connection_id, payload)
+            except Exception as e:
+                # some connections are dropped without notice, they raise
+                # exception here, we should remove these dead connections
+                dead_connections.append(connection_id)
+                logger.exception(
+                    f'Room [{room_id}] failed to send message to connection {connection_id}')
+
+        # clean_dead_connections(room_id, user['id'], dead_connections)
+
+
+def send_message_to_socket(connection_id, data):
+    print(f'send_message_to_socket {connection_id}')
+
+    connection = connections.get(connection_id)
+    if connection:
+        asyncio.create_task(connection.socket.send(json.dumps(data)))
+    else:
+        logging.warn(f'connection not exist {connection_id}')
+
+
 def delete_connection_from_rooms(event, connection_id, user, rooms):
     user_has_left = False
     for room_id in rooms:
@@ -125,86 +168,12 @@ def delete_connection_from_rooms(event, connection_id, user, rooms):
 #     queue_broadcast(json.dumps(data))
 
 
-def broadcast_new_join(room, user):
-    payload = {
-        'name': 'other join',
-        'data': {
-            'roomId': room['id'],
-            'roomType': room['type'],
-            'user': user
-        }
-    }
-    send_msg_to_room(payload, room['id'])
-
-
 def save_connection(connection_id, user, room_ids):
     connection = {
         'user': user,
         'rooms': room_ids
     }
     redis_client.set(connection_id, json.dumps(connection))
-
-
-def upsert_room(room):
-    redis_client.set(room['id'], json.dumps(room))
-
-
-def build_room_user_from_user_data(user):
-    """
-    Only keep fields useful
-    """
-    new_user = {
-        'id': user['id'],
-        'name': user['name'],
-        'avatarSrc': user['avatarSrc'],
-        'connections': []
-    }
-    return new_user
-
-
-def join_room(connection_id, user, room_id):
-
-    # check if room already exists
-    # check if connection already joined this room
-    room = get_room(room_id)
-
-    if room:
-
-        existing_users_in_room = room['users']
-        existing_user = [
-            u for u in existing_users_in_room if u['id'] == user['id']]
-        if len(existing_user) > 0:
-            existing_user = existing_user[0]
-        else:
-            existing_user = None
-
-        if existing_user:
-            user_connections = existing_user['connections']
-            if connection_id in user_connections:
-                # return directly if connection already in
-                return room
-            user_connections.append(connection_id)
-            existing_user['connections'] = user_connections[-MAX_USER_CONNECTION:]
-            # TODO: tell the connection client it's removed
-            # so UI would show disconnected
-        else:
-            new_user = build_room_user_from_user_data(user)
-            new_user['connections'].append(connection_id)
-            # broadcast_new_join(event, room, new_user)
-            # broadcast to users already in the room
-            # then join the new user
-            room['users'].append(new_user)
-
-        upsert_room(room)
-    else:
-        new_user = build_room_user_from_user_data(user)
-        new_user['connections'].append(connection_id)
-        room = {
-            'id': room_id,
-            'users': [new_user]
-        }
-        upsert_room(room)
-    return room
 
 
 # def save_user(connection_id, user_id):
