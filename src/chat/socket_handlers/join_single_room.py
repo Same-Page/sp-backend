@@ -124,19 +124,7 @@ def handle(connection, data):
         connection.join_room(room_id)
 
         room_info['chatHistory'] = get_room_messages(room_id)
-        # room_info['roomId'] = room_id
 
-        # save connection - {'user':{}, 'rooms':[]}
-        # need this mapping to remove user from all rooms they joined
-        # save_connection(connection_id, user,
-        #                 list(set(previous_joined_room_ids+[room['id']])))
-
-        # do we need this mapping? useful when user login/logout
-        # save user - {'connections':[]}
-        # save_user(connection_id, user['id'])
-
-        # TODO: client shouldn't see other user's connections
-        # time.sleep(1)
         res = {
             "name": "room info",
             "roomId": room_id,
@@ -144,8 +132,8 @@ def handle(connection, data):
         }
 
         return res
-
     else:
         return {
-            "error": "don't support visitor yet"
+            "error": 401,
+            "roomId": room_id
         }
