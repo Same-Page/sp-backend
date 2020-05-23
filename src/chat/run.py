@@ -1,11 +1,11 @@
 import json
 import uuid
 import copy
-
 import asyncio
 import pathlib
 import ssl
 import websockets
+import threading
 
 from socket_handlers import join_single_room, message, leave_single_room
 # from chat_socket import set_rooms, message, join_single_room, leave_single_room, close, delete_message
@@ -67,9 +67,18 @@ if REDIS_URL:
     redis_message_subscriber.subscribe(**{'message': message_handler})
     thread = redis_message_subscriber.run_in_thread(sleep_time=3)
 
+else:
+
+    def publish_mock(channel, data):
+        payload = {
+            'data': data
+        }
+        if channel == 'message':
+            thread = threading.Thread(target=message_handler, args=(payload,))
+            thread.start()
+
+    chat_history_client.publish = publish_mock
+
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
-
-# redis_message_subscriber.subscribe(**{'chat-history-{room_id}': message_handler})
-# thread = redis_message_subscriber.run_in_thread(sleep_time=3)
