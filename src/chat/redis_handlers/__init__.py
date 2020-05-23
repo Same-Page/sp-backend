@@ -35,5 +35,3 @@ def message_handler(data):
                 dead_connections.append(connection_id)
                 logger.exception(
                     f'Room [{room_id}] failed to send message to connection {connection_id}')
-
-    print(data)
