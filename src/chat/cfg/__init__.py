@@ -6,16 +6,6 @@ import redis
 
 logging.basicConfig(level=logging.INFO)
 
-env = os.environ.get('sp_env', 'staging')
-print(f'NOTE: running env {env}')
-
-is_local = env.lower() == 'local'
-is_local = True
-
-API_URL = "https://api-v2.yiyechat.com"
-
-REDIS_URL = 'redis://same-page-cache.1brzf1.0001.apse1.cache.amazonaws.com:6379'
-CHAT_HISTORY_REDIS_URL = 'redis://sp-chat-history.1brzf1.0001.apse1.cache.amazonaws.com:6379'
 
 MAX_ROOM_HISTORY = 30
 # how many live connection same user can have in a room
@@ -23,14 +13,17 @@ MAX_ROOM_HISTORY = 30
 MAX_USER_CONNECTION = 10
 
 
-redis_client = redis.Redis.from_url(REDIS_URL)
-chat_history_client = redis.Redis.from_url(CHAT_HISTORY_REDIS_URL)
+API_URL = os.environ.get('API_URL', "http://localhost:8080")
+REDIS_URL = os.environ.get('REDIS_URL')
 
-if is_local:
+if REDIS_URL:
+    # could use a different redis server for chat history if needed
+    CHAT_HISTORY_REDIS_URL = os.environ.get(
+        'CHAT_HISTORY_REDIS_URL', REDIS_URL)
+    redis_client = redis.Redis.from_url(REDIS_URL)
+    chat_history_client = redis.Redis.from_url(CHAT_HISTORY_REDIS_URL)
 
-    # REDIS_URL = CHAT_HISTORY_REDIS_URL = 'redis://0.0.0.0:6379'
-    API_URL = "http://localhost:8080"
-
+else:
     local_cache = {}
 
     def get_cache(key):

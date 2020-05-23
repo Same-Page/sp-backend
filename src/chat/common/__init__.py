@@ -5,8 +5,8 @@ import asyncio
 import requests
 from boto3 import client as boto3_client
 
-from cfg import is_local, redis_client, chat_history_client,\
-    API_URL, CHAT_HISTORY_REDIS_URL, MAX_ROOM_HISTORY, MAX_USER_CONNECTION
+from cfg import redis_client, chat_history_client, API_URL,\
+    MAX_ROOM_HISTORY, MAX_USER_CONNECTION
 
 from connections import connections
 
@@ -109,13 +109,14 @@ def send_msg_to_room(payload, room_id, exclude_connection=[]):
 
 
 def send_message_to_socket(connection_id, data):
-    print(f'send_message_to_socket {connection_id}')
 
     connection = connections.get(connection_id)
     if connection:
+        print(f'send_message_to_socket {connection_id}')
         connection.message(data)
     else:
-        logging.warn(f'connection not exist {connection_id}')
+        pass
+        # logging.warn(f'connection not exist {connection_id}')
 
 
 def delete_connection_from_rooms(connection_id, user, rooms):

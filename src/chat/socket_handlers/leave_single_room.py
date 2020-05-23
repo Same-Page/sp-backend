@@ -5,8 +5,6 @@ from boto3 import client as boto3_client
 import requests
 import redis
 
-
-from cfg import REDIS_URL, API_URL
 from common import get_user, get_room, get_connection, delete_connection_from_rooms, save_connection
 
 

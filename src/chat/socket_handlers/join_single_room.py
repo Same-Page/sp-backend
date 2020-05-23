@@ -8,7 +8,7 @@ import requests
 from cfg import redis_client, MAX_USER_CONNECTION
 
 from common import get_user, get_room, save_connection, get_room_messages, send_msg_to_room
-
+from redis_handlers import message_handler
 
 """
 Relationship below
@@ -124,7 +124,7 @@ def handle(connection, data):
         connection.join_room(room_id)
 
         room_info['chatHistory'] = get_room_messages(room_id)
-        room_info['roomId'] = room_id
+        # room_info['roomId'] = room_id
 
         # save connection - {'user':{}, 'rooms':[]}
         # need this mapping to remove user from all rooms they joined
@@ -139,6 +139,7 @@ def handle(connection, data):
         # time.sleep(1)
         res = {
             "name": "room info",
+            "roomId": room_id,
             "data": room_info
         }
 

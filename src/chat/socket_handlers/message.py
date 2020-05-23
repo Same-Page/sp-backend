@@ -10,7 +10,7 @@ import boto3
 from boto3 import client as boto3_client
 
 from common import get_user, get_room, get_room_messages, save_room_messages, send_msg_to_room
-
+from cfg import chat_history_client
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +21,11 @@ def save_msg(data, room_id):
     Input
         chat_message = {
             "id": message_id,
-            "roomId": room_id,
             "user": sender,
             "content": content
         }
-    Remove roomId, add created
+    add created?
     """
-    del data['roomId']
     chat_history = get_room_messages(room_id)
     chat_history.append(data)
     save_room_messages(room_id, chat_history)
@@ -135,20 +133,21 @@ def handle(connection, data):
 
     message_id = data['id']
     room_id = data['roomId']
-    content = get_content(data['content'])
-    # TODO: sanitize input!!!!!!
 
-    room = get_room(room_id)
-    # get sender from token
-    sender = get_sender_basic_info(get_user(data.get('token')))
-    if sender and room:
+    # TODO: sanitize input!!!!!!
+    content = get_content(data['content'])
+
+    # get sender from token get_user(data.get('token'))
+    user = connection.user
+    sender = get_sender_basic_info(user)
+    if sender:
 
         # sometimes sender's connection isn't in the room
         # add it to room first? Better to fix the source of bug then patching here..
 
         chat_message = {
             "id": message_id,
-            "roomId": room_id,
+            # "roomId": room_id,
             "user": sender,
             "content": content,
             'created_at': datetime.datetime.utcnow().isoformat()
@@ -156,15 +155,21 @@ def handle(connection, data):
         }
         payload = {
             "name": "chat message",
-            "data": chat_message
+            "roomId": room_id,
+            "data": chat_message,
+            "connectionId": connection.id
         }
 
-        logger.info(f"[{room['id']}] {sender['name']}: {content['value']}")
+        logger.info(f"[{room_id}] {sender['name']}: {content['value']}")
 
         # Shouldn't need this, when room message is updated, it should
         # trigger event automatically
-        send_msg_to_room(payload, room_id,
-                         exclude_connection=connection.id)
+        # send_msg_to_room(payload, room_id,
+        #                  exclude_connection=connection.id)
+
+        # include sender's socket id so they don't receive twice
+        chat_history_client.publish('message', json.dumps(payload))
+
         save_msg(chat_message, room_id)
         return payload
 
