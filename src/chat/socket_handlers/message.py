@@ -9,8 +9,8 @@ import asyncio
 import boto3
 from boto3 import client as boto3_client
 
-from common import get_user, get_room, get_room_messages, save_room_messages, send_msg_to_room
-from cfg import chat_history_client
+from common import get_user, get_room, get_room_messages, save_room_messages
+from cfg import redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -162,13 +162,8 @@ def handle(connection, data):
 
         logger.info(f"[{room_id}] {sender['name']}: {content['value']}")
 
-        # Shouldn't need this, when room message is updated, it should
-        # trigger event automatically
-        # send_msg_to_room(payload, room_id,
-        #                  exclude_connection=connection.id)
-
-        # include sender's socket id so they don't receive twice
-        chat_history_client.publish('message', json.dumps(payload))
+        # exclude sender's connectionId id so they don't receive twice
+        redis_client.publish('sp-message', json.dumps(payload))
 
         save_msg(chat_message, room_id)
         return payload

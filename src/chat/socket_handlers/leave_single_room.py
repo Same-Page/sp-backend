@@ -5,7 +5,7 @@ from boto3 import client as boto3_client
 import requests
 import redis
 
-from common import get_user, get_room, get_connection, delete_connection_from_rooms, save_connection
+from common import delete_connection_from_rooms, broadcast_user_left
 
 
 def handle(connection, data):
@@ -14,25 +14,21 @@ def handle(connection, data):
     Remove room from connection
     """
     connection_id = connection.id
-
     room_id = data['roomId']
-    token = data.get('token')
-    # user = get_user(token) # user is already on connection object
     user = connection.user
     if user:
 
-        delete_connection_from_rooms(connection_id, user, [room_id])
-
+        delete_connection_from_rooms(connection, [room_id])
         connection.leave_room(room_id)
+
         return {
             "name": "left room",
-            "data": {
-                "roomId": room_id
-            }
+            "roomId": room_id,
+            "user": user
         }
 
     else:
         return {
-            'error': 'not logged in'
+            'error': 401
 
         }

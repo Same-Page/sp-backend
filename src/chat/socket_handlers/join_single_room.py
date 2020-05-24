@@ -7,7 +7,7 @@ import requests
 
 from cfg import redis_client, MAX_USER_CONNECTION
 
-from common import get_user, get_room, save_connection, get_room_messages, send_msg_to_room
+from common import get_user, get_room, get_room_messages
 from redis_handlers import message_handler
 
 """
@@ -57,15 +57,15 @@ def build_room_user_from_user_data(user, connection_id):
     return new_user
 
 
-def broadcast_new_join(room, user):
+def broadcast_new_join(connection_id, room_id, user):
     payload = {
         'name': 'other join',
-        'data': {
-            'roomId': room['id'],
-            'user': user
-        }
+        "roomId": room_id,
+        "connectionId": connection_id,
+        'user':  user
+
     }
-    send_msg_to_room(payload, room['id'])
+    redis_client.publish('sp-user', json.dumps(payload))
 
 
 def join_room(connection, user, room_id):
@@ -95,8 +95,8 @@ def join_room(connection, user, room_id):
             # so UI would show disconnected
         else:
             new_user = build_room_user_from_user_data(user, connection.id)
-            # shouldn't need to call this, subscribe instead
-            broadcast_new_join(room, new_user)
+
+            broadcast_new_join(connection.id, room_id, new_user)
             # broadcast to users already in the room
             # then join the new user
             room['users'].append(new_user)

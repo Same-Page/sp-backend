@@ -3,7 +3,7 @@ import json
 import asyncio
 
 from cfg import MAX_USER_CONNECTION, redis_client
-from common import get_room, send_msg_to_room
+from common import get_room
 from connections import connections
 
 

@@ -7,15 +7,15 @@ import ssl
 import websockets
 import threading
 
-from socket_handlers import join_single_room, message, leave_single_room
-# from chat_socket import set_rooms, message, join_single_room, leave_single_room, close, delete_message
+from socket_handlers import join_single_room, message, leave_single_room, close
+
 from connections import connections
 from connection import Connection
-from cfg import REDIS_URL, redis_client, chat_history_client
+from cfg import REDIS_URL, redis_client
 from redis_handlers import message_handler
 # when it's single server websocket, we can keep reference to each socket
-# in a dictionary in memory;
-# when it's multiple servers, use redis to save each room's chat history,
+# in a dictionary in memory or use redis server;
+# when it's multiple servers, have to use redis to save each room's chat history,
 # more importantly, subscribe to room message events.
 # LB issue?
 
@@ -25,8 +25,6 @@ def handle_event(connection, data):
     data = data['data']
     res = 'no handler for ' + action
 
-    # if action == 'join':
-    #     res = set_rooms.lambda_handler(mock_event, None)['body']
     if action == 'message':
         res = message.handle(connection, data)
     if action == 'join_single':
@@ -53,7 +51,7 @@ async def run(websocket, path):
         except websockets.ConnectionClosed:
             print(f"{connection.id} closed by client")
             connection.close()
-            # close.lambda_handler(mock_event, None)
+            close.handle(connection)
             break
 
 start_server = websockets.serve(
@@ -62,9 +60,9 @@ start_server = websockets.serve(
 
 
 if REDIS_URL:
-    redis_message_subscriber = chat_history_client.pubsub()
+    redis_message_subscriber = redis_client.pubsub()
 
-    redis_message_subscriber.subscribe(**{'message': message_handler})
+    redis_message_subscriber.subscribe(**{'sp-*': message_handler})
     thread = redis_message_subscriber.run_in_thread(sleep_time=3)
 
 else:
@@ -73,11 +71,10 @@ else:
         payload = {
             'data': data
         }
-        if channel == 'message':
-            thread = threading.Thread(target=message_handler, args=(payload,))
-            thread.start()
+        thread = threading.Thread(target=message_handler, args=(payload,))
+        thread.start()
 
-    chat_history_client.publish = publish_mock
+    redis_client.publish = publish_mock
 
 
 asyncio.get_event_loop().run_until_complete(start_server)
