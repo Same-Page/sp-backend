@@ -17,7 +17,6 @@ class Connection:
 
     async def message(self, data):
         await self.socket.send(json.dumps(data))
-        # asyncio.create_task(self.socket.send(json.dumps(data)))
 
     def join_room(self, room_id):
         self.room_ids.append(room_id)
