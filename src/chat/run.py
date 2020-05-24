@@ -62,7 +62,7 @@ start_server = websockets.serve(
 if REDIS_URL:
     redis_message_subscriber = redis_client.pubsub()
 
-    redis_message_subscriber.subscribe(**{'sp-*': message_handler})
+    redis_message_subscriber.subscribe(**{'sp': message_handler})
     thread = redis_message_subscriber.run_in_thread(sleep_time=3)
 
 else:

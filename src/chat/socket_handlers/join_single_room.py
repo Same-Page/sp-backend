@@ -65,7 +65,7 @@ def broadcast_new_join(connection_id, room_id, user):
         'user':  user
 
     }
-    redis_client.publish('sp-user', json.dumps(payload))
+    redis_client.publish('sp', json.dumps(payload))
 
 
 def join_room(connection, user, room_id):

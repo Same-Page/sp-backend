@@ -163,7 +163,7 @@ def handle(connection, data):
         logger.info(f"[{room_id}] {sender['name']}: {content['value']}")
 
         # exclude sender's connectionId id so they don't receive twice
-        redis_client.publish('sp-message', json.dumps(payload))
+        redis_client.publish('sp', json.dumps(payload))
 
         save_msg(chat_message, room_id)
         return payload

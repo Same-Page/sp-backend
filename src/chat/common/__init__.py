@@ -61,7 +61,7 @@ def broadcast_user_left(connection_id, room_id, user):
         'user':  user
 
     }
-    redis_client.publish('sp-user', json.dumps(payload))
+    redis_client.publish('sp', json.dumps(payload))
 
 
 def delete_connection_from_rooms(connection, room_ids):
