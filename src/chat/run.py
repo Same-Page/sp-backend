@@ -55,7 +55,7 @@ async def run(websocket, path):
             break
 
 start_server = websockets.serve(
-    run, "localhost", 8765
+    run, "0.0.0.0", 8765
 )
 
 
