@@ -8,11 +8,11 @@
 
 ### `/web` rest api 服务器
 
-用 Python Flask 搭建的 rest api，负责一叶的所有功能，登录，注册，私信，留言，等等。
+该目录下是一个 Python Flask 应用，提供一叶所有的 rest API，支持登录，注册，私信，留言，等等功能。
 
 ### `/chat` websocket 聊天服务器
 
-用 Python Websocket 搭建的 websocket，负责一叶的实时聊天功能，需要调取`/web`的 API 获取用户的登录信息。
+该目录下是一个 Python Websocket 应用，单独负责一叶的实时聊天功能，依赖前者提供的 rest API 来获取登录用户的信息。
 
 ## 本地开发
 
@@ -24,6 +24,8 @@ pip install -r requirements.txt
 python run.py
 ```
 
+默认运行在`localhost:8080`
+
 ### `/chat` websocket 聊天服务器
 
 ```
@@ -31,6 +33,8 @@ cd chat
 pip install -r requirements.txt
 python run.py
 ```
+
+默认运行在`localhost:8765`
 
 ## 运行 Docker 容器
 
