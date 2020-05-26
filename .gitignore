@@ -2,3 +2,5 @@
 .DS_Store
 *.db
 *.pyc
+src/web/.kube/*
+*.pyc

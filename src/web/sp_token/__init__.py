@@ -1,7 +1,7 @@
 import functools
 from flask import request, abort, jsonify
 
-from .tokens import tokens
+from .tokens import get_user
 
 
 def get_user_from_token(required=True):
@@ -11,7 +11,7 @@ def get_user_from_token(required=True):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             token = request.headers.get("token")
-            user = tokens.get(token) if token else None
+            user = get_user(token) if token else None
             if not user and required:
                 return jsonify({"error": "请重新登录"}), 401
             kwargs["user"] = user
