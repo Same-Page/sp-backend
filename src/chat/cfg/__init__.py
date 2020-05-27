@@ -20,7 +20,7 @@ if REDIS_URL:
     # could use a different redis server for chat history if needed
     CHAT_HISTORY_REDIS_URL = os.environ.get(
         'CHAT_HISTORY_REDIS_URL', REDIS_URL)
-    redis_client = redis.Redis.from_url(REDIS_URL)
+    redis_client = redis.Redis.from_url(REDIS_URL, socket_timeout=3)
     chat_history_client = redis.Redis.from_url(CHAT_HISTORY_REDIS_URL)
 
 else:

@@ -24,6 +24,7 @@ def message_handler(data):
                 continue
             connection = connections.get(connection_id)
             if connection:
+                print(f'{connection_id} is in this server')
 
                 try:
                     asyncio.run(connection.message(payload))
@@ -34,3 +35,6 @@ def message_handler(data):
                     # dead_connections.append(connection_id)
                     logger.exception(
                         f'Room [{room_id}] failed to send message to connection {connection_id}')
+            else:
+
+                print(f'{connection_id} is NOT in this server')
