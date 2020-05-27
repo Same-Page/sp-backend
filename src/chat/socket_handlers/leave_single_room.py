@@ -13,7 +13,6 @@ def handle(connection, data):
     Remove connection from room
     Remove room from connection
     """
-    connection_id = connection.id
     room_id = data['roomId']
     user = connection.user
     if user:

@@ -7,7 +7,7 @@ import requests
 
 from cfg import redis_client, MAX_USER_CONNECTION
 
-from common import get_user, get_room, get_room_messages
+from common import get_user, get_room, get_room_messages, upsert_room
 from redis_handlers import message_handler
 
 """
@@ -40,8 +40,12 @@ Data in cache
 """
 
 
-def upsert_room(room):
-    redis_client.set(room['id'], json.dumps(room))
+def build_room_connection(connection_id):
+    return {
+        'id': connection_id,
+        'created_at': time.time(),
+        'heartbeat': time.time()
+    }
 
 
 def build_room_user_from_user_data(user, connection_id):
@@ -52,7 +56,7 @@ def build_room_user_from_user_data(user, connection_id):
         'id': user['id'],
         'name': user['name'],
         'avatarSrc': user['avatarSrc'],
-        'connections': [connection_id]
+        'connections': [build_room_connection(connection_id)]
     }
     return new_user
 
@@ -86,12 +90,15 @@ def join_room(connection, user, room_id):
 
         if existing_user:
             user_connections = existing_user['connections']
-            if connection.id in user_connections:
+            existing_connection = [
+                c for c in user_connections if c['id'] == connection.id]
+            if len(existing_connection) > 0:
                 # return directly if connection already in
+                # TODO: should tell client about this
                 return room
-            user_connections.append(connection.id)
+            user_connections.append(build_room_connection(connection.id))
             existing_user['connections'] = user_connections[-MAX_USER_CONNECTION:]
-            # TODO: tell the connection client it's removed
+            # TODO: tell the connection client it's removed due to max connection limit
             # so UI would show disconnected
         else:
             new_user = build_room_user_from_user_data(user, connection.id)
@@ -114,10 +121,10 @@ def join_room(connection, user, room_id):
 
 def handle(connection, data):
 
-    room = data['room']
     token = data.get('token')
+    room_id = data['roomId']
     user = get_user(token)
-    room_id = room['id']
+
     if user:
         connection.user = user
         room_info = join_room(connection, user, room_id)

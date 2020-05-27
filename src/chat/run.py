@@ -7,7 +7,8 @@ import ssl
 import websockets
 import threading
 
-from socket_handlers import join_single_room, message, leave_single_room, close
+from socket_handlers import join_single_room, message, leave_single_room,\
+    close, heartbeat
 
 from connections import connections
 from connection import Connection
@@ -25,12 +26,15 @@ def handle_event(connection, data):
     data = data['data']
     res = 'no handler for ' + action
 
-    if action == 'message':
-        res = message.handle(connection, data)
     if action == 'join_single':
         res = join_single_room.handle(connection, data)
     if action == 'leave_single':
         res = leave_single_room.handle(connection, data)
+    if action == 'message':
+        res = message.handle(connection, data)
+    if action == 'heartbeat':
+        res = heartbeat.handle(connection, data)
+
     # if action == 'delete_message':
     #     print('del')
     #     res = delete_message.lambda_handler(mock_event, None)['body']

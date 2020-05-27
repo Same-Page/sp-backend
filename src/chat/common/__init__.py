@@ -16,13 +16,18 @@ logger = logging.getLogger(__name__)
 def get_room(room_id):
     if not room_id:
         return None
-    data = redis_client.get(room_id)
+    data = redis_client.get(f'room-{room_id}')
     if data:
         room = json.loads(data)
         # ensure basic fields
         room['users'] = room.get('users', [])
         return room
     return None
+
+
+def upsert_room(room):
+    room_id = room['id']
+    redis_client.set(f'room-{room_id}', json.dumps(room))
 
 
 def get_room_messages(room_id):
@@ -76,9 +81,14 @@ def delete_connection_from_rooms(connection, room_ids):
                                 if u['id'] == user['id']]
                 if len(user_in_room) > 0:
                     user_in_room = user_in_room[0]
-                    if connection_id in user_in_room['connections']:
+                    connection_in_room = [
+                        c for c in user_in_room['connections'] if c['id'] == connection_id]
+                    if len(connection_in_room) > 0:
+                        connection_in_room = connection_in_room[0]
                         # remove connection from user
-                        user_in_room['connections'].remove(connection_id)
+                        user_in_room['connections'] = [
+                            c for c in user_in_room['connections'] if c['id'] != connection_id]
+
                         if len(user_in_room['connections']) == 0:
                             # remove user from room
                             room['users'] = [u for u in room['users']
@@ -92,7 +102,7 @@ def delete_connection_from_rooms(connection, room_ids):
                             else:
                                 user_has_left = True
 
-                        redis_client.set(room_id, json.dumps(room))
+                        upsert_room(room)
                         if user_has_left:
                             # broadcast user left
                             broadcast_user_left(connection_id, room_id, user)
