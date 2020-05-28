@@ -14,11 +14,12 @@ from connections import connections
 from connection import Connection
 from cfg import REDIS_URL, redis_client
 from redis_handlers import message_handler
+from task import ghost_buster
+
 # when it's single server websocket, we can keep reference to each socket
 # in a dictionary in memory or use redis server;
 # when it's multiple servers, have to use redis to save each room's chat history,
 # more importantly, subscribe to room message events.
-# LB issue?
 
 
 def handle_event(connection, data):
@@ -81,5 +82,12 @@ else:
     redis_client.publish = publish_mock
 
 
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+# keep killing ghost connections every couple minutes
+ghost_buster_thread = threading.Thread(target=ghost_buster)
+ghost_buster_thread.start()
+
+
+loop = asyncio.get_event_loop()
+# the webscoekt server
+loop.run_until_complete(start_server)
+loop.run_forever()

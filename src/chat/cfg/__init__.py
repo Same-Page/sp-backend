@@ -7,11 +7,14 @@ import redis
 logging.basicConfig(level=logging.INFO)
 
 
-MAX_ROOM_HISTORY = 30
+MAX_ROOM_HISTORY = os.environ.get('MAX_ROOM_HISTORY', 30)
 # how many live connection same user can have in a room
 # e.g. user open multiple tabs
-MAX_USER_CONNECTION = 10
+MAX_USER_CONNECTION = os.environ.get('MAX_USER_CONNECTION', 10)
 
+# if client doesn't send heartbeat for more than this threashold
+# ghost buster will delete this connection from room
+HEARTBEAT_TIMOUT = os.environ.get('HEARTBEAT_TIMOUT', 60)
 
 API_URL = os.environ.get('API_URL', "http://localhost:8080")
 REDIS_URL = os.environ.get('REDIS_URL')

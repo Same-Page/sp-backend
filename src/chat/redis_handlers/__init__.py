@@ -12,15 +12,16 @@ def message_handler(data):
 
     payload = json.loads(data['data'])
     room_id = payload['roomId']
-    exclude_connection = payload['connectionId']
+    exclude_connection_id = payload['connectionId']
     room = get_room(room_id)
 
     users = room['users']
     for user in users:
         # dead_connections = []
 
-        for connection_id in user['connections']:
-            if exclude_connection == connection_id:
+        for connection in user['connections']:
+            connection_id = connection['id']
+            if exclude_connection_id == connection_id:
                 continue
             connection = connections.get(connection_id)
             if connection:
