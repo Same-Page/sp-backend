@@ -19,7 +19,6 @@ def handle(connection, data):
     in the room and let client handle it.
     """
 
-    token = data.get('token')
     room_id = data['roomId']
     room = get_room(room_id)
     user = connection.user
@@ -42,7 +41,7 @@ def handle(connection, data):
             if len(connection_in_room) > 0:
                 connection_in_room = connection_in_room[0]
                 connection_in_room['heartbeat'] = time.time()
-                res = {'success': True}
+                res['success'] = True
                 upsert_room(room)
             else:
                 res['error'] = 'user is in room but connection not found'
