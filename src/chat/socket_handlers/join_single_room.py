@@ -76,6 +76,9 @@ def join_room(connection, user, room_id):
 
     # check if room already exists
     # check if connection already joined this room
+    # TODO: check if user is allowed to join this room
+    # need to check room data from db
+
     room = get_room(room_id)
 
     if room:

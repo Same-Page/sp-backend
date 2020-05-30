@@ -12,7 +12,7 @@ def message_handler(data):
 
     payload = json.loads(data['data'])
     room_id = payload['roomId']
-    exclude_connection_id = payload['connectionId']
+    exclude_connection_id = payload.get('connectionId')
     room = get_room(room_id)
 
     users = room['users']

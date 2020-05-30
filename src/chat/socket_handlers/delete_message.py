@@ -5,14 +5,11 @@ from boto3 import client as boto3_client
 import requests
 from cfg import redis_client
 
-from common import get_user, join_room, get_connection, save_connection, get_room_messages, save_room_messages, send_msg_to_room
+from common import get_room_messages, save_room_messages
 
 
-def lambda_handler(event, context):
-    connection_id = event["requestContext"].get("connectionId")
-    data = json.loads(event['body'])['data']
-    token = data.get('token')
-    user = get_user(token)
+def handle(connection, data):
+    user = connection.user
     if user:
         room_id = data.get('roomId')
         del_msg_id = data.get('messageId')
@@ -22,41 +19,36 @@ def lambda_handler(event, context):
         # 2. user is room owner
         # 3. own message
 
-        if not user['isMod']:
-            if not str(room_id) in user['rooms']:
-
-                for m in msgs:
-                    if m['id'] == del_msg_id:
-                        msg_sender = m['user']
-                        if user['id'] != msg_sender['id']:
-                            return {
-                                'statusCode': 403,
-                                'body': json.dumps('forbidden!')
-                            }
+        existing_msg = [m for m in msgs if m['id'] == del_msg_id]
+        if len(existing_msg) > 0:
+            existing_msg = existing_msg[0]
+        else:
+            return {
+                'error': 404,
+                "roomId": room_id,
+                'message': 'message not found'
+            }
+        if not user['isMod'] and not str(room_id) in user['rooms'] and existing_msg['user']['id'] != user['id']:
+            return {
+                'error': 403,
+                "roomId": room_id,
+                'message': 'no permission to delete message'
+            }
 
         msgs = [m for m in msgs if m['id'] != del_msg_id]
         save_room_messages(room_id, msgs)
 
         payload = {
             "name": "delete message",
-            "data": {
-                "roomId": room_id,
-                "messageId": del_msg_id
-            }
+            "roomId": room_id,
+            "data": del_msg_id,
+            "connectionId": connection.id
         }
+        redis_client.publish('sp', json.dumps(payload))
 
-        endpoint_url = 'https://' + event["requestContext"]["domainName"] + \
-            '/'+event["requestContext"]["stage"]
-
-        send_msg_to_room(endpoint_url, payload, room_id,
-                         exclude_connection=connection_id)
-
-        return {
-            'statusCode': 200,
-            'body': json.dumps(payload)
-        }
+        return payload
     else:
         return {
-            'statusCode': 401,
-            'body': json.dumps('not logged in!')
+            "error": 401,
+            "roomId": room_id
         }
