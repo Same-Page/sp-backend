@@ -18,7 +18,7 @@ def update_user(user=None):
     """
 
     user_file = request.files.get("file")
-    file_name = f"00000_chat_upload/{user['numId']}-{user_file.filename}"
+    file_name = f"00000_chat_upload/{user['id']}-{user_file.filename}"
     upload_file(user_file, file_name)
     cloud_front_url = f"{cloud_front}{file_name}"
 
