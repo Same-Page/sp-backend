@@ -1,4 +1,5 @@
 import copy
+import json
 
 from flask import Blueprint, request, jsonify
 from sqlalchemy.sql import func
@@ -22,9 +23,14 @@ comment_api = Blueprint("Comment", __name__)
 def post_comment(user=None):
 
     payload = request.get_json()
-    # TODO: sanitize input
     url = payload["url"]
+
+    # TODO: sanitize input
     content = payload["content"]
+    # TODO: check file type, hard code to image for now
+    if content['type'] == 'file':
+        content['type'] = 'image'
+    content = json.dumps(content)
     # TODO: camel case from frontend
     # reply_to_user_id = payload.get("replay_to_user_id")
     # reply_to_user_name = payload.get("replay_to_user_name")
@@ -33,8 +39,6 @@ def post_comment(user=None):
     #     content = "@" + reply_to_user_name + "\n" + content
     # TODO: send notification
 
-    # Because when getting comments, we join on user.id, so we also need to
-    # save with user.id here
     db_comment = Comment(url=url, content=content, user_id=user['id'])
     db.session.add(db_comment)
     db.session.commit()
@@ -172,10 +176,8 @@ class CommentObj:
 
     def to_dict(self):
         res = copy.deepcopy(self.comment)
-        res['content'] = {
-            'value': self.comment['content'],
-            'type': 'text'
-        }
+        res['content'] = json.loads(self.comment['content'])
+
         res['user'] = self.commenter
         res['like_count'] = self.like_count or 0
         res['dislike_count'] = self.dislike_count or 0

@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, request, jsonify
 import emoji
 
@@ -31,10 +33,17 @@ def post_message(user=None):
     receiver = payload["userId"]
     content = payload["content"]
     offset = payload.get("offset", -1)
-    value = content["value"]
+    # TODO: sanitize
+    # TODO: support file type, right now always assume image
+    # message type checking code should be in /common
+    if content['type'] == 'file':
+        content['value'] = content['url']
+        content['type'] = 'image'
+
+    content = json.dumps(content)
 
     db.session.add(
-        Message(sender=user['id'], receiver=receiver, message=value))
+        Message(sender=user['id'], receiver=receiver, message=content))
     db.session.commit()
     return _get_messages(user, offset)
 
@@ -79,18 +88,8 @@ def _get_messages(user, offset=0):
             # on each message to save bandwidth
             'self': self_sent,
             'created_at': msg.created_at,
-            'content': {
-                'type': 'text',
-                'value': msg.message
-            }
+            'content': json.loads(msg.message)
         }
-        # message type checking code below should be shared
-        # with chat server
-        if is_pure_emoji(msg.message):
-            msg_dict['content']['type'] = 'emoji'
-
-        elif is_image(msg.message):
-            msg_dict['content']['type'] = 'image'
 
         if other_id in conversations:
             conversation = conversations[other_id]
