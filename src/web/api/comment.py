@@ -43,7 +43,7 @@ def post_comment(user=None):
     db.session.add(db_comment)
     db.session.commit()
     comment_obj = CommentObj(db_comment.to_dict(), user)
-    return jsonify([comment_obj.to_dict()])
+    return jsonify(comment_obj.to_dict())
 
 
 @comment_api.route("/api/v1/comment/vote", methods=["POST"])
