@@ -6,7 +6,7 @@ from models.auth import Auth
 from models import db
 from sp_token.tokens import create_token, revoke_token
 from sp_token import get_user_from_token
-from api.follow import get_follows, get_follower_count, get_following_count
+from api.follow import get_follows
 from api.name import get_rand_name
 # from cfg.urls import s3
 

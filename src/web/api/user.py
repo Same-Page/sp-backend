@@ -7,7 +7,7 @@ from sqlalchemy import desc
 from models import db
 from models.user import User
 from models.follow import Follow
-from api.follow import get_follower_count
+from api.follow import get_follower_count, get_following_count
 from api.auth import Account
 from sp_token import get_user_from_token
 from sp_token.tokens import revoke_all_tokens_of_user, refresh_user_data
@@ -84,38 +84,16 @@ def change_room(user=None):
 @user_api.route("/api/v1/user/<int:user_id>", methods=["GET"])
 @get_user_from_token(True)
 def get_user_from_id(user_id, user=None):
-    # print(f"user id {user_id}")
-    return _get_user(user, id=user_id)
-
-
-def _get_user(login_user, **kwarg):
     # should not be used to get self data
     # use account login to get self data
-    user = User.query.filter_by(**kwarg).first()
-    follower_num = get_follower_count(user.id)
-    res = user.to_dict()
-    res["followerCount"] = follower_num
-    res["following"] = False
-    if user:
-        if (
-            Follow.query.filter_by(user_id=user.id)
-            .filter_by(follower_id=login_user['id'])
-            .filter_by(active=True)
-            .first()
-        ):
-            res["following"] = True
+    res = User.query.filter_by(id=user_id).first()
+
+    res = res.to_dict()
+
+    res["followerCount"] = get_follower_count(user_id)
+    res["followingCount"] = get_following_count(user_id)
+
     return jsonify(res)
-
-
-# To be deleted when client's uuid same as id
-@user_api.route("/api/v1/user/<uuid>", methods=["GET"])
-@get_user_from_token(True)
-def get_user_from_uuid(uuid, user=None):
-    # old client is sending uuid instead of id to socket server
-    # TODO: update socket server to send id from login lookup
-    # no such need, uuid's value will be the same as id in the future
-    # print(f"uuid {uuid}")
-    return _get_user(user, uuid=uuid)
 
 
 @user_api.route("/api/v1/latest_users", methods=["GET"])
