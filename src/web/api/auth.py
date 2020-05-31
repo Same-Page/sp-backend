@@ -6,7 +6,7 @@ from models.auth import Auth
 from models import db
 from sp_token.tokens import create_token, revoke_token
 from sp_token import get_user_from_token
-from api.follow import get_follower_count, get_following_count
+from api.follow import get_follows, get_follower_count, get_following_count
 from api.name import get_rand_name
 # from cfg.urls import s3
 
@@ -32,13 +32,14 @@ class Account:
         }
         """
         account_data = self.user
-        # No needed to use s3 url since we are using version now,
-        # updating avatar will get a new version number,
-        # requesting foo.jpg?v=2 will force cloudfront to fetch
-        # latest from s3
+
         account_data["token"] = self.token
-        account_data["followerCount"] = get_follower_count(self.user['id'])
-        account_data["followingCount"] = get_following_count(self.user['id'])
+        follower_ids, following_ids = get_follows(self.user['id'])
+        account_data["followers"] = follower_ids
+        account_data["followings"] = following_ids
+
+        # account_data["followerCount"] = get_follower_count(self.user['id'])
+        # account_data["followingCount"] = get_following_count(self.user['id'])
         return account_data
 
 

@@ -53,28 +53,53 @@ def follow_user(user=None):
     Follow or unfollow
     """
     payload = request.get_json()
-    uuid = payload["id"]
+    user_id = payload["id"]
+    follow = payload["follow"]
     existing_follow = Follow.query.filter(
-        Follow.follower_id == user['id'], Follow.user_id == uuid
+        Follow.follower_id == user['id'], Follow.user_id == user_id
     ).first()
     if existing_follow:
-        existing_follow.active = False if existing_follow.active else True
+        existing_follow.active = follow
     else:
         db.session.add(
-            Follow(follower_id=user['id'], user_id=uuid, active=True))
+            Follow(follower_id=user['id'], user_id=user_id, active=True))
     db.session.commit()
     return "success"
 
 
-def get_follower_count(uuid):
+def get_follower_count(user_id):
     follower_num = Follow.query.filter(
-        Follow.user_id == uuid, Follow.active == True
+        Follow.user_id == user_id, Follow.active == True
     ).count()
     return follower_num
 
 
-def get_following_count(uuid):
+def get_following_count(user_id):
     following_num = Follow.query.filter(
-        Follow.follower_id == uuid, Follow.active == True
+        Follow.follower_id == user_id, Follow.active == True
     ).count()
     return following_num
+
+
+def get_follows(user_id):
+    """
+    return:
+    {
+        followings: [1,2,3]
+        followers: [1,2,3]
+    }
+    """
+    follows = Follow.query.filter(Follow.active == True).filter(
+        (Follow.follower_id == user_id) | (Follow.user_id == user_id)
+    ).all()
+
+    followings = []
+    followers = []
+
+    for f in follows:
+        if f.user_id == user_id:
+            followings.append(f.follower_id)
+        else:
+            followers.append(f.user_id)
+
+    return followers, followings

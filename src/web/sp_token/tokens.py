@@ -6,9 +6,10 @@ from unittest.mock import MagicMock
 
 from cfg import REDIS_URL
 
-
+# TODO: redis client is general cache, not just for token
+# move to a dedicated file
 if REDIS_URL:
-    redis_client = redis.Redis.from_url(REDIS_URL)
+    redis_client = redis.Redis.from_url(REDIS_URL, socket_timeout=3)
 else:
     # Note that token stored in memory can only works with single
     # instance with single process. Even multiple processes in
