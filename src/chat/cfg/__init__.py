@@ -7,7 +7,7 @@ import redis
 logging.basicConfig(level=logging.INFO)
 
 
-MAX_ROOM_HISTORY = os.environ.get('MAX_ROOM_HISTORY', 30)
+MAX_ROOM_HISTORY = os.environ.get('MAX_ROOM_HISTORY', 50)
 # how many live connection same user can have in a room
 # e.g. user open multiple tabs
 MAX_USER_CONNECTION = os.environ.get('MAX_USER_CONNECTION', 10)
