@@ -102,8 +102,10 @@ def _get_messages(user, offset=0):
         conversations[other.id]["user"] = other.to_dict()
 
     # Convert to array and sort by last message time
-    conversations = sorted(list(conversations.values(
-    )), key=lambda c: c['messages'][-1]['created_at'], reverse=True)
+    # No such need, key value format is easier for frontend to merge
+    # new conversations
+    # conversations = sorted(list(conversations.values(
+    # )), key=lambda c: c['messages'][-1]['created_at'], reverse=True)
 
     return jsonify(conversations)
 
