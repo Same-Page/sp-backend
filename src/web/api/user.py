@@ -1,8 +1,7 @@
 from datetime import datetime, date, timedelta
 
 from flask import Blueprint, request, jsonify
-from sqlalchemy import func
-from sqlalchemy import desc
+from sqlalchemy import func, desc, and_
 
 from models import db
 from models.user import User
@@ -97,8 +96,8 @@ def get_user_from_id(user_id, user=None):
     res['isFollowing'] = False
     res['isFollower'] = False
     follows = Follow.query.filter(Follow.active == True).filter(
-        (Follow.follower_id == user_id and Follow.user_id == user['id']) |
-        (Follow.user_id == user_id and Follow.follower_id == user['id'])
+        and_(Follow.follower_id == user_id, Follow.user_id == user['id']) |
+        and_(Follow.user_id == user_id, Follow.follower_id == user['id'])
     ).all()
 
     for f in follows:
