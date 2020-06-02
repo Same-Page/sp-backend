@@ -93,6 +93,21 @@ def get_user_from_id(user_id, user=None):
     res["followerCount"] = get_follower_count(user_id)
     res["followingCount"] = get_following_count(user_id)
 
+    # check if login user is following or followed by target user
+    res['isFollowing'] = False
+    res['isFollower'] = False
+    follows = Follow.query.filter(Follow.active == True).filter(
+        (Follow.follower_id == user_id and Follow.user_id == user['id']) |
+        (Follow.user_id == user_id and Follow.follower_id == user['id'])
+    ).all()
+
+    for f in follows:
+        if f.user_id == user['id']:
+            res['isFollower'] = True
+        # count follow self as well
+        if f.follower_id == user['id']:
+            res['isFollowing'] = True
+
     return jsonify(res)
 
 
