@@ -55,7 +55,7 @@ def post_video_danmu(video_id, user=None):
     # TODO: sanitize input!
     content = payload['content']
     danmu = Danmu(video_id=video_id, type=video_type,
-                  content=content, uuid=user['id'], sec=sec)
+                  content=content, user_id=user['id'], sec=sec)
     db.session.add(danmu)
     db.session.commit()
     return 'success!'

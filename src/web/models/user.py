@@ -31,7 +31,7 @@ class User(db.Model):
 
     def to_dict(self):
         if self.has_avatar:
-            avatar_src = f"{cloud_front}{self.uuid}.jpg?v={self.has_avatar}"
+            avatar_src = f"{cloud_front}{self.id}.jpg?v={self.has_avatar}"
         else:
             avatar_id = self.id % 150
             avatar_src = f"{cloud_front}avatar/{avatar_id}.jpg"

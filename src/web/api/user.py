@@ -36,6 +36,7 @@ def user_from_token(user=None):
 def update_user(user=None):
     name = request.form.get("name")
     about = request.form.get("about")
+    website = request.form.get("website")
     avatar = request.files.get("avatar")
 
     u = User.query.filter_by(id=user['id']).first()
@@ -57,25 +58,6 @@ def update_user(user=None):
     refresh_user_data(token, u)
     return jsonify(account_data)
 
-
-@user_api.route("/api/v1/change_room", methods=["POST"])
-@get_user_from_token(True)
-def change_room(user=None):
-    payload = request.get_json()
-    mode = payload.get('mode')
-    room = payload.get('room')
-
-    u = User.query.filter_by(uuid=user['id']).first()
-    if mode:
-        u.mode = mode
-    if room:
-        u.room = room
-    db.session.commit()
-
-    token = request.headers.get("token")
-    refresh_user_data(token, u)
-
-    return 'ok'
 
 # Endpoints below for getting other user rather than self
 
@@ -128,9 +110,7 @@ def thank_user(user=None):
         return "not for yourself", 400
     # Check time, set time
 
-    # user id in payload is uuid
-    # user.id is just id since it's from db model
-    user = User.query.filter_by(uuid=user['id']).first()
+    user = User.query.filter_by(id=user['id']).first()
     time_elapse = datetime.now() - user.last_checkin
 
     thank_wait_time = THANK_WAIT_TIME
@@ -140,7 +120,7 @@ def thank_user(user=None):
     if time_elapse.seconds < thank_wait_time:
         return "Too soon", 429
 
-    target_user = User.query.filter_by(uuid=user_id).first()
+    target_user = User.query.filter_by(id=user_id).first()
     target_user.credit = target_user.credit + 3
     user.credit = user.credit + 1
     user.last_checkin = datetime.now()
@@ -159,7 +139,7 @@ def block_user(user=None):
     payload = request.get_json()
     user_id = payload["userId"]
     block_until = date.today() + timedelta(3)
-    target_user = User.query.filter_by(uuid=user_id).first()
+    target_user = User.query.filter_by(id=user_id).first()
     if target_user.role >= user['role']:
         return jsonify("Target user has higher permission"), 409
 
@@ -178,7 +158,7 @@ def unblock_user(user=None):
 
     payload = request.get_json()
     user_id = payload["userId"]
-    target_user = User.query.filter_by(uuid=user_id).first()
+    target_user = User.query.filter_by(id=user_id).first()
     if target_user.role >= user['role']:
         return jsonify("Target user has higher permission"), 409
 

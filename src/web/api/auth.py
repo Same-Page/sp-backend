@@ -96,9 +96,12 @@ def reset_password(user=None):
 def register():
     payload = request.get_json()
     password = payload["password"]
-    name = payload.get("name") or get_rand_name()
+    email = payload.get("email")
+    name = payload.get("name", get_rand_name())
+    about = payload.get("about")
+    website = payload.get("website")
     password_hash = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt(10))
-    user = User(name=name)
+    user = User(name=name, about=about)  # TODO: email and website fields
     db.session.add(user)
     db.session.commit()
 
