@@ -9,7 +9,6 @@ from models.comment import Comment
 from models.user import User
 from models.vote import Vote
 from models import db
-from sp_token.tokens import create_token
 from cfg.urls import cloud_front
 from sp_token import get_user_from_token
 

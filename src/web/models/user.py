@@ -12,6 +12,8 @@ class User(db.Model):
     credit = db.Column(db.Integer, default=10)
     name = db.Column(db.String(50), default="no name")
     about = db.Column(db.String(500))
+    email = db.Column(db.String(100))
+    website = db.Column(db.String(200))
     has_avatar = db.Column(db.Integer, default=0)
     role = db.Column(db.Integer, default=0)
     rooms = db.Column(db.String(100))
@@ -29,7 +31,7 @@ class User(db.Model):
         return False
         # return self.block_until and datetime.datetime.now() < self.block_until
 
-    def to_dict(self):
+    def to_dict(self, return_email=False):
         if self.has_avatar:
             avatar_src = f"{cloud_front}{self.id}.jpg?v={self.has_avatar}"
         else:
@@ -42,6 +44,8 @@ class User(db.Model):
 
             "id": self.id,
             "name": self.name,
+            "email": self.email,
+            "website": self.website,
             "credit": self.credit,
             "about": self.about,
             "role": self.role,

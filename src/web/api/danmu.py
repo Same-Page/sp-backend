@@ -8,7 +8,6 @@ from models.danmu import Danmu
 from models.user import User
 from models.vote import Vote
 from models import db
-from sp_token.tokens import create_token
 from sp_token import get_user_from_token
 from clients.youtube import get_comments
 

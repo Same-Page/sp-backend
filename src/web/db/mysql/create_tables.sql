@@ -11,6 +11,8 @@ CREATE TABLE `user` (
   `name` varchar(50) CHARACTER SET utf8mb4 DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `about` varchar(500) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `website` varchar(200) CHARACTER SET utf8mb4 DEFAULT NULL,
   `credit` int(11) NOT NULL DEFAULT '10',
   `last_checkin` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `has_avatar` tinyint(1) NOT NULL DEFAULT '0',

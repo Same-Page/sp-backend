@@ -6,7 +6,7 @@ import emoji
 from models.user import User
 from models.message import Message
 from models import db
-from sp_token.tokens import create_token, revoke_token
+
 from sp_token import get_user_from_token
 from api.follow import get_follower_count, get_following_count
 

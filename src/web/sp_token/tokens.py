@@ -43,10 +43,10 @@ def get_user(token):
     return user
 
 
-def create_token(user):
+def create_token(user_dict):
     token = token_hex(16)
-    redis_client.set(token, json.dumps(user.to_dict()))
-    add_token_to_user(user.id, token)
+    redis_client.set(token, json.dumps(user_dict))
+    add_token_to_user(user_dict['id'], token)
     return token
 
 

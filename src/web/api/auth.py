@@ -46,10 +46,23 @@ class Account:
 @auth_api.route("/api/v1/login", methods=["POST"])
 def login():
     payload = request.get_json()
-    user_id = payload["userId"]
+    email = payload["email"]
     password = payload["password"]
-    auth = Auth.query.filter_by(user_id=user_id).first()
+
+    # Allow user to use user id to login, but it's not exposed
+    # in the UI for simplicity
+    if email.isdigit():
+        user = User.query.filter(User.id == email).first()
+    else:
+        user = User.query.filter(User.email == email).first()
+
+    if not user:
+        return jsonify({"error": "用户不存在"}), 400
+
+    auth = Auth.query.filter_by(user_id=user.id).first()
     if not auth:
+        # some really really old legacy user maybe
+        # shouldn't happen
         return jsonify({"error": "账号不存在"}), 400
 
     correct_pwd = auth.password
@@ -57,16 +70,20 @@ def login():
         # Mysql db return string type
         correct_pwd = correct_pwd.encode("utf8")
     except:
-        print('password is byte type')
-        pass
+        # sqlite return byte type
+        print('password is byte type already for sqlite')
 
     if bcrypt.checkpw(password.encode("utf8"), correct_pwd):
-        user = User.query.filter_by(id=user_id).first()
-        # Check if banned
+        # password is correct
+        # check if banned or not before letting in
+
         if user.is_banned():
             return jsonify({"error": "封禁中"}), 403
-        token = create_token(user)
-        account_data = Account(token, user.to_dict()).to_dict()
+
+        user_dict = user.to_dict(return_email=True)
+
+        token = create_token(user_dict)
+        account_data = Account(token, user_dict).to_dict()
         return jsonify(account_data)
     else:
         return jsonify({"error": "密码错误"}), 401
@@ -75,14 +92,18 @@ def login():
 @auth_api.route("/api/v1/account", methods=["GET"])
 @get_user_from_token(required=True)
 def get_account_data(user=None):
+    """
+    Not currently used, could use it when we want to get latest
+    user data of himself.
+    """
     token = request.headers.get("token")
     account_data = Account(token, user).to_dict()
     return jsonify(account_data)
 
 
-@auth_api.route("/api/v1/reset_password", methods=["POST"])
+@auth_api.route("/api/v1/change_password", methods=["POST"])
 @get_user_from_token(required=True)
-def reset_password(user=None):
+def change_password(user=None):
     payload = request.get_json()
     new_password = payload["password"]
     new_hash = bcrypt.hashpw(new_password.encode("utf8"), bcrypt.gensalt(10))
@@ -101,7 +122,12 @@ def register():
     about = payload.get("about")
     website = payload.get("website")
     password_hash = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt(10))
-    user = User(name=name, about=about)  # TODO: email and website fields
+
+    existing_user = User.query.filter(User.email == email).first()
+    if existing_user:
+        return jsonify({"error": "邮箱已经注册"}), 409
+
+    user = User(name=name, about=about, email=email, website=website)
     db.session.add(user)
     db.session.commit()
 
@@ -109,8 +135,9 @@ def register():
     db.session.add(auth)
     db.session.commit()
 
-    token = create_token(user)
-    account_data = Account(token, user.to_dict()).to_dict()
+    user_dict = user.to_dict(return_email=True)
+    token = create_token(user_dict)
+    account_data = Account(token, user_dict).to_dict()
     return jsonify(account_data)
 
 

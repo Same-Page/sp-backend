@@ -35,11 +35,18 @@ def user_from_token(user=None):
 @get_user_from_token(True)
 def update_user(user=None):
     name = request.form.get("name")
+    email = request.form.get("email")
     about = request.form.get("about")
     website = request.form.get("website")
     avatar = request.files.get("avatar")
 
     u = User.query.filter_by(id=user['id']).first()
+
+    if email != u.email:
+        # if updating email, ensure new email isn't already registered
+        email_registered_by_user = User.query.filter_by(email=email).first()
+        if email_registered_by_user:
+            return jsonify({"error": "email registed already!"}), 409
 
     if avatar:
         u.has_avatar = u.has_avatar + 1
@@ -47,6 +54,8 @@ def update_user(user=None):
 
     u.name = name
     u.about = about
+    u.website = website
+    u.email = email
 
     # User.query.filter_by(id=user.id).update(
     #     {"name": user.name, "about": user.about, "has_avatar": user.has_avatar}
@@ -54,7 +63,7 @@ def update_user(user=None):
 
     db.session.commit()
     token = request.headers.get("token")
-    account_data = Account(token, u.to_dict()).to_dict()
+    account_data = Account(token, u.to_dict(return_email=True)).to_dict()
     refresh_user_data(token, u)
     return jsonify(account_data)
 
@@ -69,7 +78,7 @@ def get_user_from_id(user_id, user=None):
     # use account login to get self data
     res = User.query.filter_by(id=user_id).first()
 
-    res = res.to_dict()
+    res = res.to_dict(return_email=False)
 
     res["followerCount"] = get_follower_count(user_id)
     res["followingCount"] = get_following_count(user_id)
@@ -165,3 +174,15 @@ def unblock_user(user=None):
     target_user.block_until = None
     db.session.commit()
     return jsonify(f"unblocked")
+
+
+@user_api.route("/api/v1/user/check_email_registered", methods=["POST"])
+def check_email_registered():
+    payload = request.get_json()
+    email = payload["email"]
+
+    user = User.query.filter_by(email=email).first()
+    registered = True if user else False
+    return jsonify({
+        "registered": registered
+    })

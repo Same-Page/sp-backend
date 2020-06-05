@@ -12,6 +12,8 @@ CREATE TABLE "user" (
 	"id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"name"	TEXT,
 	"about"	TEXT,
+	"email"	TEXT,
+	"website"	TEXT,
 	"created_at"	INTEGER,
 	"credit"	INTEGER,
 	"has_avatar"	INTEGER,
