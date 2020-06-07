@@ -24,10 +24,25 @@ def get_rooms(user=None):
     if room_owner_id:
         query = query.filter(Room.owner == room_owner_id)
     res = query.all()
-    rooms = []
+    # Include same page and same site room
+    rooms = [
+        {
+            'id': -1,
+            'type': 'site',
+            'name': '网站大厅',
+            'about': '当前网站的所有用户都可以进入该房间。'
+        },
+        {
+            'id': -2,
+            'type': 'page',
+            'name': '同网页',
+            'about': '只有浏览当前网页的用户可以进入该房间。'
+        }
+    ]
     for room, user in res:
-        room_with_owner = RoomWithOwner(room, user)
+        room_with_owner = RoomWithOwner(room, user.to_dict())
         rooms.append(room_with_owner.to_dict())
+
     return jsonify(rooms)
 
 
