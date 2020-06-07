@@ -41,6 +41,13 @@ def get_room(room_id, user=None):
     return jsonify(room_with_owner.to_dict())
 
 
+def get_user_room_count(user_id):
+    room_count = Room.query.filter(
+        Room.owner == user_id
+    ).count()
+    return room_count
+
+
 @room_api.route("/api/v1/room", methods=["PUT"])
 @get_user_from_token(required=True)
 def update_room(user=None):

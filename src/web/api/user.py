@@ -8,6 +8,7 @@ from models.user import User
 from models.follow import Follow
 from api.follow import get_follower_count, get_following_count
 from api.auth import Account
+from api.room import get_user_room_count
 from sp_token import get_user_from_token
 from sp_token.tokens import revoke_all_tokens_of_user, refresh_user_data
 
@@ -82,6 +83,7 @@ def get_user_from_id(user_id, user=None):
 
     res["followerCount"] = get_follower_count(user_id)
     res["followingCount"] = get_following_count(user_id)
+    res["roomCount"] = get_user_room_count(user_id)
 
     # check if login user is following or followed by target user
     res['isFollowing'] = False

@@ -7,6 +7,7 @@ from models import db
 from sp_token.tokens import create_token, revoke_token
 from sp_token import get_user_from_token
 from api.follow import get_follower_count, get_following_count
+from api.room import get_user_room_count
 from api.name import get_rand_name
 
 
@@ -34,12 +35,10 @@ class Account:
         account_data = self.user
 
         account_data["token"] = self.token
-        # follower_ids, following_ids = get_follows(self.user['id'])
-        # account_data["followers"] = follower_ids
-        # account_data["followings"] = following_ids
-
-        account_data["followerCount"] = get_follower_count(self.user['id'])
-        account_data["followingCount"] = get_following_count(self.user['id'])
+        user_id = self.user['id']
+        account_data["roomCount"] = get_user_room_count(user_id)
+        account_data["followerCount"] = get_follower_count(user_id)
+        account_data["followingCount"] = get_following_count(user_id)
         return account_data
 
 
