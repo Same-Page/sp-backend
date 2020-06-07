@@ -7,7 +7,7 @@ from models import db
 from models.user import User
 from models.follow import Follow
 from api.follow import get_follower_count, get_following_count
-from api.auth import Account
+from api.account import Account
 from api.room import get_user_room_count
 from sp_token import get_user_from_token
 from sp_token.tokens import revoke_all_tokens_of_user, refresh_user_data
@@ -35,39 +35,40 @@ def user_from_token(user=None):
 @user_api.route("/api/v1/user", methods=["POST"])
 @get_user_from_token(True)
 def update_user(user=None):
-    name = request.form.get("name")
     email = request.form.get("email")
-    about = request.form.get("about")
-    website = request.form.get("website")
-    avatar = request.files.get("avatar")
-
     u = User.query.filter_by(id=user['id']).first()
-
     if email != u.email:
         # if updating email, ensure new email isn't already registered
         email_registered_by_user = User.query.filter_by(email=email).first()
         if email_registered_by_user:
             return jsonify({"error": "email registed already!"}), 409
 
-    if avatar:
-        u.has_avatar = u.has_avatar + 1
-        upload_file(avatar, f"{u.id}.jpg")
+    update_user_info(u)
 
-    u.name = name
-    u.about = about
-    u.website = website
-    u.email = email
-
-    # User.query.filter_by(id=user.id).update(
-    #     {"name": user.name, "about": user.about, "has_avatar": user.has_avatar}
-    # )
-
-    db.session.commit()
     token = request.headers.get("token")
     account_data = Account(token, u.to_dict(return_email=True)).to_dict()
     refresh_user_data(token, u)
     return jsonify(account_data)
 
+
+def update_user_info(user):
+    """
+    Used by both update_user and register
+    """
+    name = request.form.get("name")
+    email = request.form.get("email")
+    about = request.form.get("about")
+    website = request.form.get("website")
+    avatar = request.files.get("avatar")
+
+    user.name = name
+    user.about = about
+    user.website = website
+    user.email = email
+    if avatar:
+        user.avatar = user.avatar + 1
+        upload_file(avatar, f"{user.id}.jpg")
+    db.session.commit()
 
 # Endpoints below for getting other user rather than self
 

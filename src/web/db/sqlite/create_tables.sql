@@ -16,7 +16,7 @@ CREATE TABLE "user" (
 	"website"	TEXT,
 	"created_at"	INTEGER,
 	"credit"	INTEGER,
-	"has_avatar"	INTEGER,
+	"avatar"	INTEGER,
 	"role"	INTEGER,
 	"rooms"	TEXT
 );

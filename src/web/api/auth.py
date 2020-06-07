@@ -6,40 +6,11 @@ from models.auth import Auth
 from models import db
 from sp_token.tokens import create_token, revoke_token
 from sp_token import get_user_from_token
-from api.follow import get_follower_count, get_following_count
-from api.room import get_user_room_count
 from api.name import get_rand_name
-
+from api.user import update_user_info
+from api.account import Account
 
 auth_api = Blueprint("Auth", __name__)
-
-
-class Account:
-    def __init__(self, token, user):
-        self.token = token
-        self.user = user
-
-    def to_dict(self):
-        """  
-        {  
-        token: "dsfaoijclkjvzcxzviojsifj"
-        id: dsfa-dfad-sfasdfad-fdasfa
-        numId: 123
-        name: "real admin"
-        about: "大家好！"
-        credit: 78
-        followerCount: 123
-        followingCount: 321
-        }
-        """
-        account_data = self.user
-
-        account_data["token"] = self.token
-        user_id = self.user['id']
-        account_data["roomCount"] = get_user_room_count(user_id)
-        account_data["followerCount"] = get_follower_count(user_id)
-        account_data["followingCount"] = get_following_count(user_id)
-        return account_data
 
 
 @auth_api.route("/api/v1/login", methods=["POST"])
@@ -114,19 +85,17 @@ def change_password(user=None):
 
 @auth_api.route("/api/v1/register", methods=["POST"])
 def register():
-    payload = request.get_json()
-    password = payload["password"]
-    email = payload.get("email")
-    name = payload.get("name", get_rand_name())
-    about = payload.get("about")
-    website = payload.get("website")
-    password_hash = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt(10))
+
+    email = request.form.get("email")
 
     existing_user = User.query.filter(User.email == email).first()
     if existing_user:
         return jsonify({"error": "邮箱已经注册"}), 409
 
-    user = User(name=name, about=about, email=email, website=website)
+    password = request.form.get("password")
+    password_hash = bcrypt.hashpw(password.encode("utf8"), bcrypt.gensalt(10))
+
+    user = User()
     db.session.add(user)
     db.session.commit()
 
@@ -134,7 +103,12 @@ def register():
     db.session.add(auth)
     db.session.commit()
 
+    update_user_info(user)
+
     user_dict = user.to_dict(return_email=True)
+    # TODO: sometimes create token failed due to connection
+    # to redis, but user is already created, still return 200 OK
+    # to client in this case
     token = create_token(user_dict)
     account_data = Account(token, user_dict).to_dict()
     return jsonify(account_data)

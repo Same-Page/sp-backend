@@ -15,7 +15,7 @@ CREATE TABLE `user` (
   `website` varchar(200) CHARACTER SET utf8mb4 DEFAULT NULL,
   `credit` int(11) NOT NULL DEFAULT '10',
   `last_checkin` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `has_avatar` tinyint(1) NOT NULL DEFAULT '0',
+  `avatar` tinyint(1) NOT NULL DEFAULT '0',
   `role` int(11) DEFAULT '0',
   `block_until` timestamp NULL DEFAULT NULL,
   `rooms` varchar(50) CHARACTER SET utf8mb4 DEFAULT NULL,

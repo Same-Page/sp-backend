@@ -14,7 +14,7 @@ class User(db.Model):
     about = db.Column(db.String(500))
     email = db.Column(db.String(100))
     website = db.Column(db.String(200))
-    has_avatar = db.Column(db.Integer, default=0)
+    avatar = db.Column(db.Integer, default=0)
     role = db.Column(db.Integer, default=0)
     # rooms = db.Column(db.String(100))
     # block_until = Column(DateTime)
@@ -32,8 +32,8 @@ class User(db.Model):
         # return self.block_until and datetime.datetime.now() < self.block_until
 
     def to_dict(self, return_email=False):
-        if self.has_avatar:
-            avatar_src = f"{cloud_front}/{self.id}.jpg?v={self.has_avatar}"
+        if self.avatar:
+            avatar_src = f"{cloud_front}/{self.id}.jpg?v={self.avatar}"
         else:
             avatar_id = self.id % 150
             avatar_src = f"{cloud_front}/avatar/{avatar_id}.jpg"

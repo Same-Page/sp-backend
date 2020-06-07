@@ -73,7 +73,7 @@ def vote_comment(user=None):
 #         .join(User)
 #         .order_by(desc(Comment.id))
 #         .group_by(User)
-#         # .filter(User.has_avatar)
+#         # .filter(User.avatar)
 #         .limit(10)
 #         .all()
 #     )
