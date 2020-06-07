@@ -59,3 +59,16 @@ CREATE TABLE `vote` (
   `user_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ;
+
+CREATE TABLE `room` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `owner` int(11) DEFAULT NULL,
+  `name` varchar(50) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `about` varchar(1000) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `rules` varchar(1000) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `cover` tinyint(1) NOT NULL DEFAULT '0',
+  `background` tinyint(1) NOT NULL DEFAULT '0',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ;

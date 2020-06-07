@@ -54,3 +54,15 @@ CREATE TABLE "follow" (
 	"updated_at"	INTEGER,
 	"active"	INTEGER
 );
+
+CREATE TABLE "room" (
+	"id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	"owner"	INTEGER,
+	"name"	TEXT,
+	"about"	TEXT,
+	"rules"	TEXT,
+	"cover"	INTEGER,
+	"background"	INTEGER,
+	"active"	INTEGER,
+	"created_at"	INTEGER
+);

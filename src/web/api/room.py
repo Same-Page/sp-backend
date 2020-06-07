@@ -8,10 +8,11 @@ from models.user import User
 from models import db
 from sp_token import get_user_from_token
 from sp_token.tokens import refresh_user_data
+from clients.s3 import upload_file
 
 room_api = Blueprint("Room", __name__)
 
-CREATE_ROOM_COST = 10
+CREATE_ROOM_COST = 0
 
 
 @room_api.route("/api/v1/rooms", methods=["GET"])
@@ -25,9 +26,8 @@ def get_rooms(user=None):
     res = query.all()
     rooms = []
     for room, user in res:
-        room_data = room.to_dict()
-        room_data['owner'] = user.to_dict()
-        rooms.append(room_data)
+        room_with_owner = RoomWithOwner(room, user)
+        rooms.append(room_with_owner.to_dict())
     return jsonify(rooms)
 
 
@@ -37,71 +37,80 @@ def get_room(room_id, user=None):
     room, user = db.session.query(Room, User).join(
         User).filter(Room.id == room_id).first()
 
-    room_data = room.to_dict()
-    room_data['owner'] = user.to_dict()
-    return jsonify(room_data)
+    room_with_owner = RoomWithOwner(room, user)
+    return jsonify(room_with_owner.to_dict())
 
 
-@room_api.route("/api/v1/site_to_rooms", methods=["GET"])
-@get_user_from_token(required=False)
-def get_site_to_rooms(user=None):
-    # Only for lobby for now
-    # SiteToRoom
-    # res = SiteToRoom.query(...).join(Room).join(User).group_by(Room.id).all()
+@room_api.route("/api/v1/room", methods=["PUT"])
+@get_user_from_token(required=True)
+def update_room(user=None):
+    room_id = request.form.get("id")
 
-    res = db.session.query(SiteToRoom, Room, User).join(Room, SiteToRoom.room_id == Room.id).join(
-        User, Room.owner == User.id).filter(Room.active == True).all()
-    sites_to_rooms = {}
+    room = Room.query.filter_by(id=room_id).first()
+    if room.owner != user['id']:
+        return jsonify({'error': 'not your room'}), 403
 
-    for site_to_room, room, owner in res:
-        room_data = room.to_dict()
-        room_data['owner'] = owner.to_dict()
-        sites_to_rooms[site_to_room.hostname] = room_data
+    update_room_model(room)
 
-    # Can grow to be a big payload quickly
-    return jsonify(sites_to_rooms)
+    db.session.commit()
+
+    room_with_owner = RoomWithOwner(room, user)
+
+    return jsonify(room_with_owner.to_dict())
 
 
-@room_api.route("/api/v1/create_room", methods=["POST"])
+def update_room_model(room):
+    name = request.form.get("name")
+    about = request.form.get("about")
+    cover = request.files.get("cover")
+    background = request.files.get("background")
+
+    room.name = name
+    room.about = about
+
+    if cover:
+        upload_file(cover, f"00000_room/{room.id}-cover.jpg")
+        room.cover = room.cover + 1
+    if background:
+        upload_file(background, f"00000_room/{room.id}-bg.jpg")
+        room.background = room.background + 1
+
+
+@room_api.route("/api/v1/room", methods=["POST"])
 @get_user_from_token(required=True)
 def create_room(user=None):
 
-    u = User.query.filter_by(id=user['numId']).first()
-    existing_room_id = request.form.get("roomId")
-    if (existing_room_id):
-        # todo: check if real owner of the room
-        room = Room.query.filter_by(id=existing_room_id).first()
-        if room.owner != u.id:
-            return 403
-        room.name = request.form.get("name")
-        room.about = request.form.get("about")
-        room.background = request.form.get("background")
-        room.cover = request.form.get("cover")
-        room.media = request.form.get("media")
-        db.session.commit()
-        res = room.to_dict()
-        res['owner'] = u.to_dict()
-        return jsonify(res)
+    u = User.query.filter_by(id=user['id']).first()
 
     if u.credit < CREATE_ROOM_COST:
         return 'low credit', 402
 
     u.credit = u.credit - CREATE_ROOM_COST
 
-    # name = request.form.get("name")
-    # about = request.form.get("about")
-
-    room = Room(owner=u.id, **request.form)
-    # room = Room(name=name, about=about, owner=u.id)
+    room = Room(owner=u.id)
 
     db.session.add(room)
     db.session.commit()
-    if u.room:
-        u.room = f'{u.room},{room.id}'
-    else:
-        u.room = room.id
+
+    update_room_model(room)
     db.session.commit()
 
     token = request.headers.get("token")
     refresh_user_data(token, u)
-    return jsonify(room.to_dict())
+
+    room_with_owner = RoomWithOwner(room, user)
+
+    return jsonify(room_with_owner.to_dict())
+
+
+class RoomWithOwner:
+    def __init__(self, room, user_dict):
+        self.user_dict = user_dict
+        self.room = room
+
+    def to_dict(self):
+        room_dict = self.room.to_dict()
+        # client always expect room id to be string
+        room_dict['id'] = str(room_dict['id'])
+        room_dict['owner'] = self.user_dict
+        return room_dict

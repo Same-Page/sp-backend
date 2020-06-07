@@ -5,6 +5,8 @@ import logging
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 
 from models import db
+from cfg.urls import cloud_front
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,50 +18,32 @@ class Room(db.Model):
     owner = db.Column(db.Integer, ForeignKey("user.id"))
     name = db.Column(db.String(50))
     about = db.Column(db.String(1000))
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    cover = db.Column(db.Integer, default=0)
+    background = db.Column(db.Integer, default=0)
+    rules = db.Column(db.String(1000))
     active = db.Column(db.Boolean, default=True)
-
-    background = db.Column(db.String(100))
-    cover = db.Column(db.String(100))
-    media = db.Column(db.String(10000))
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     def __repr__(self):
         return "<Room %r>" % self.id
 
     def to_dict(self):
-
-        if self.media:
-            media_list = []
-            try:
-                for m in self.media.split():
-                    media_src = re.search(r"\((.*?)\)", m).group(1)
-                    media_name = re.search(r"\[(.*?)\]", m).group(1)
-                    media_type = 'video/mp4'
-                    if 'youtube.com' in media_src or 'youtu.be' in media_src:
-                        media_type = 'video/youtube'
-                    media_list.append({
-                        'name': media_name,
-                        'sources': [
-                            {
-                                'src': media_src,
-                                'type': media_type
-                            }
-                        ]
-                    })
-            except:
-                logger.exception(f'failed to parse media for room {self.id}')
-        else:
-            media_list = None
+        cover = None
+        bg = None
+        if self.cover:
+            cover = f"{cloud_front}/00000_room/{self.id}-cover.jpg?v={self.cover}"
+        if self.background:
+            bg = f"{cloud_front}/00000_room/{self.id}-bg.jpg?v={self.background}"
 
         return {
             "id": self.id,
             "owner": self.owner,
             "name": self.name,
             "about": self.about,
+            "rules": self.rules,
             "active": self.active,
-            "background": self.background,
-            "cover": self.cover,
-            "media": media_list,
-            "mediaRaw": self.media,
-            "type": 'room'
+            "background": bg,
+            "cover": cover,
+            "created_at": self.created_at
+
         }
