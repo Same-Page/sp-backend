@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.sql import func
 from sqlalchemy import desc, text
+import json
 
 from models.room import Room
 from models.site_to_room import SiteToRoom
@@ -9,39 +10,51 @@ from models import db
 from sp_token import get_user_from_token
 from sp_token.tokens import refresh_user_data
 from clients.s3 import upload_file
+from cfg import redis_client
 
 room_api = Blueprint("Room", __name__)
 
 CREATE_ROOM_COST = 0
 
 
-@room_api.route("/api/v1/rooms", methods=["GET"])
+@room_api.route("/api/v1/get_rooms", methods=["POST"])
 @get_user_from_token(required=False)
 def get_rooms(user=None):
-    room_owner_id = request.args.get('userId')
+
+    payload = request.get_json()
+
+    room_owner_id = payload.get('userId')
+    url = payload.get('url')
+    domain = payload.get('domain')
+
     query = db.session.query(Room, User).join(
         User).filter(Room.active == True)
+    rooms = []
     if room_owner_id:
         query = query.filter(Room.owner == room_owner_id)
+    else:
+        # Include same page and same site room
+        rooms = [
+            RoomWithOwner({
+                'id': domain,
+                'type': 'site',
+                'name': '网站大厅',
+                'about': '当前网站的所有用户都可以进入该房间。'
+            }).to_dict(),
+            RoomWithOwner({
+                'id': url,
+                'type': 'page',
+                'name': '同网页',
+                'about': '只有浏览当前网页的用户可以进入该房间。'
+            }).to_dict()
+        ]
     res = query.all()
-    # Include same page and same site room
-    rooms = [
-        {
-            'id': -1,
-            'type': 'site',
-            'name': '网站大厅',
-            'about': '当前网站的所有用户都可以进入该房间。'
-        },
-        {
-            'id': -2,
-            'type': 'page',
-            'name': '同网页',
-            'about': '只有浏览当前网页的用户可以进入该房间。'
-        }
-    ]
+
     for room, user in res:
-        room_with_owner = RoomWithOwner(room, user.to_dict())
+        room_with_owner = RoomWithOwner(room.to_dict(), user.to_dict())
         rooms.append(room_with_owner.to_dict())
+
+    rooms = sorted(rooms, key=lambda r: r['userCount'], reverse=True)
 
     return jsonify(rooms)
 
@@ -52,7 +65,7 @@ def get_room(room_id, user=None):
     room, user = db.session.query(Room, User).join(
         User).filter(Room.id == room_id).first()
 
-    room_with_owner = RoomWithOwner(room, user)
+    room_with_owner = RoomWithOwner(room.to_dict(), user)
     return jsonify(room_with_owner.to_dict())
 
 
@@ -76,7 +89,7 @@ def update_room(user=None):
 
     db.session.commit()
 
-    room_with_owner = RoomWithOwner(room, user)
+    room_with_owner = RoomWithOwner(room.to_dict(), user)
 
     return jsonify(room_with_owner.to_dict())
 
@@ -120,19 +133,27 @@ def create_room(user=None):
     token = request.headers.get("token")
     refresh_user_data(token, u)
 
-    room_with_owner = RoomWithOwner(room, user)
+    room_with_owner = RoomWithOwner(room.to_dict(), user)
 
     return jsonify(room_with_owner.to_dict())
 
 
 class RoomWithOwner:
-    def __init__(self, room, user_dict):
+    def __init__(self, room_dict, user_dict=None):
         self.user_dict = user_dict
-        self.room = room
+        self.room_dict = room_dict
+        self.user_count = 0
+
+        room_in_cache = redis_client.get(f'room-{room_dict["id"]}')
+        if room_in_cache:
+            room_in_cache = json.loads(room_in_cache)
+            self.user_count = len(room_in_cache.get('users', []))
 
     def to_dict(self):
-        room_dict = self.room.to_dict()
+        # maybe deep copy first
+        room_dict = self.room_dict
         # client always expect room id to be string
         room_dict['id'] = str(room_dict['id'])
         room_dict['owner'] = self.user_dict
+        room_dict['userCount'] = self.user_count
         return room_dict
