@@ -60,7 +60,7 @@ def get_user(token):
 
 def broadcast_user_left(connection_id, room_id, user):
     payload = {
-        'name': 'other left',
+        'name': 'other_left',
         "roomId": room_id,
         "connectionId": connection_id,
         'user':  user

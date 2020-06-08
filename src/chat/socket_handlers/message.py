@@ -154,7 +154,7 @@ def handle(connection, data):
 
         }
         payload = {
-            "name": "chat message",
+            "name": "chat_message",
             "roomId": room_id,
             "data": chat_message,
             "connectionId": connection.id

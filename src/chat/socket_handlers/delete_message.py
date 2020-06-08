@@ -8,7 +8,7 @@ from cfg import redis_client
 from common import get_room_messages, save_room_messages
 from common.permission import has_permission
 
-ACTION_NAME = "delete message"
+ACTION_NAME = "delete_message"
 
 
 def handle(connection, data):

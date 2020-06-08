@@ -21,7 +21,7 @@ def handle(connection, data):
         connection.leave_room(room_id)
 
         return {
-            "name": "left room",
+            "name": "left_room",
             "roomId": room_id,
             "user": user
         }

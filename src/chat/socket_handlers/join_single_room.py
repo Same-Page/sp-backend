@@ -9,6 +9,7 @@ from cfg import redis_client, MAX_USER_CONNECTION
 
 from common import get_user, get_room, get_room_messages, upsert_room
 from redis_handlers import message_handler
+from common.permission import has_permission
 
 """
 Relationship below
@@ -38,6 +39,7 @@ Data in cache
 }
 
 """
+ACTION_NAME = "join_room"
 
 
 def build_room_connection(connection_id):
@@ -63,7 +65,7 @@ def build_room_user_from_user_data(user, connection_id):
 
 def broadcast_new_join(connection_id, room_id, user):
     payload = {
-        'name': 'other join',
+        'name': 'other_join',
         "roomId": room_id,
         "connectionId": connection_id,
         'user':  user
@@ -131,19 +133,25 @@ def handle(connection, data):
     if user:
         connection.user = user
         connection.token = token
-        room_info = join_room(connection, user, room_id)
-        connection.join_room(room_id)
 
-        room_info['chatHistory'] = get_room_messages(room_id)
+        if has_permission(ACTION_NAME, room_id, token):
 
-        res = {
-            "name": "room info",
-            "roomId": room_id,
-            "data": room_info
-        }
-
-        return res
+            room_info = join_room(connection, user, room_id)
+            connection.join_room(room_id)
+            room_info['chatHistory'] = get_room_messages(room_id)
+            res = {
+                "name": "room_info",
+                "roomId": room_id,
+                "data": room_info
+            }
+            return res
+        else:
+            return {
+                "name": "forbidden_to_join",
+                "roomId": room_id
+            }
     else:
+
         return {
             "error": 401,
             "roomId": room_id

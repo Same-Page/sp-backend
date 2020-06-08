@@ -10,6 +10,10 @@ from sp_token import get_user_from_token
 permission_api = Blueprint("Permission", __name__)
 
 
+def has_permission_response():
+    return jsonify({"success": True}), 200
+
+
 @permission_api.route("/api/v1/has_permission", methods=["POST"])
 @get_user_from_token(True)
 def has_permission(user=None):
@@ -19,12 +23,15 @@ def has_permission(user=None):
     """
     payload = request.get_json()
     action = payload["action"]
-    if action == 'delete message':
+
+    if action == 'join_room':
+        return has_permission_response()
+    if action == 'delete_message':
         room_id = payload["room_id"]
         room = Room.query.filter(Room.id == room_id).first()
         if room:
             if room.owner == user['id']:
-                return jsonify({"success": True}), 200
+                return has_permission_response()
             else:
                 return jsonify({"error": 'No permission to delete message'}),  403
         else:
