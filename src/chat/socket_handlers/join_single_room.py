@@ -130,6 +130,7 @@ def handle(connection, data):
 
     if user:
         connection.user = user
+        connection.token = token
         room_info = join_room(connection, user, room_id)
         connection.join_room(room_id)
 

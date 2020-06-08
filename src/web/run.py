@@ -13,6 +13,7 @@ from api.danmu import danmu_api
 from api.upload import upload_api
 from api.invitation import invitation_api
 from api.room import room_api
+from api.permission import permission_api
 
 
 def create_app():
@@ -31,6 +32,7 @@ def create_app():
     app.register_blueprint(upload_api)
     app.register_blueprint(invitation_api)
     app.register_blueprint(room_api)
+    app.register_blueprint(permission_api)
     return app
 
 

@@ -1,0 +1,15 @@
+
+
+
+Original idea is to have this folder to share some common codes between
+/web and /chat, e.g. code for parsing message type
+
+
+But it's simpler to set working directory to /web or /chat when running 
+either of the services and git commit hisotry would look much cleaner if 
+we separate /chat and /web into two repos.
+
+Also easier to setup CICD with two repos...
+
+
+TBD
