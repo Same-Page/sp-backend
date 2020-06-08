@@ -39,23 +39,29 @@ def get_rooms(user=None):
                 'id': domain,
                 'type': 'site',
                 'name': '网站大厅',
+                'color': '#40a9ff',
+                'cover': 'https://dnsofx4sf31ab.cloudfront.net/00000_chat_upload/30-party.jpeg',
                 'about': '当前网站的所有用户都可以进入该房间。'
             }).to_dict(),
             RoomWithOwner({
                 'id': url,
+                'color': '#52c41a',
                 'type': 'page',
                 'name': '同网页',
+                'cover': 'https://i7.pngflow.com/pngimage/676/782/png-night-sky-star-background-material-blue-night-sky-star-blue-poster-banner-clipart.png',
                 'about': '只有浏览当前网页的用户可以进入该房间。'
             }).to_dict()
         ]
     res = query.all()
 
+    user_created_rooms = []
     for room, user in res:
         room_with_owner = RoomWithOwner(room.to_dict(), user.to_dict())
-        rooms.append(room_with_owner.to_dict())
+        user_created_rooms.append(room_with_owner.to_dict())
 
-    rooms = sorted(rooms, key=lambda r: r['userCount'], reverse=True)
-
+    user_created_rooms = sorted(
+        user_created_rooms, key=lambda r: r['userCount'], reverse=True)
+    rooms.extend(user_created_rooms)
     return jsonify(rooms)
 
 
