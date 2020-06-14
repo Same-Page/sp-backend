@@ -76,6 +76,7 @@ def update_user_info(user):
 @user_api.route("/api/v1/user/<int:user_id>", methods=["GET"])
 @get_user_from_token(True)
 def get_user_from_id(user_id, user=None):
+    # TBD: require user login to see other user's info?
     # should not be used to get self data
     # use account login to get self data
     res = User.query.filter_by(id=user_id).first()

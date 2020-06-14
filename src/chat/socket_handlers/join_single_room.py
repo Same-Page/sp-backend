@@ -9,7 +9,7 @@ from cfg import redis_client, MAX_USER_CONNECTION
 
 from common import get_user, get_room, get_room_messages, upsert_room
 from redis_handlers import message_handler
-from common.permission import has_permission
+from common.permission import check_permission
 
 """
 Relationship below
@@ -126,33 +126,18 @@ def join_room(connection, user, room_id):
 
 def handle(connection, data):
 
-    token = data.get('token')
     room_id = data['roomId']
-    user = get_user(token)
+    user = connection.user
+    token = connection.token
 
-    if user:
-        connection.user = user
-        connection.token = token
+    check_permission(ACTION_NAME, token, room_id)
 
-        if has_permission(ACTION_NAME, room_id, token):
-
-            room_info = join_room(connection, user, room_id)
-            connection.join_room(room_id)
-            room_info['chatHistory'] = get_room_messages(room_id)
-            res = {
-                "name": "room_info",
-                "roomId": room_id,
-                "data": room_info
-            }
-            return res
-        else:
-            return {
-                "name": "forbidden_to_join",
-                "roomId": room_id
-            }
-    else:
-
-        return {
-            "error": 401,
-            "roomId": room_id
-        }
+    room_info = join_room(connection, user, room_id)
+    connection.join_room(room_id)
+    room_info['chatHistory'] = get_room_messages(room_id)
+    res = {
+        "name": "room_info",
+        "roomId": room_id,
+        "data": room_info
+    }
+    return res

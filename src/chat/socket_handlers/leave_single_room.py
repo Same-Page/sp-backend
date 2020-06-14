@@ -15,19 +15,12 @@ def handle(connection, data):
     """
     room_id = data['roomId']
     user = connection.user
-    if user:
 
-        delete_connection_from_rooms(connection, [room_id])
-        connection.leave_room(room_id)
+    delete_connection_from_rooms(connection, [room_id])
+    connection.leave_room(room_id)
 
-        return {
-            "name": "left_room",
-            "roomId": room_id,
-            "user": user
-        }
-
-    else:
-        return {
-            'error': 401
-
-        }
+    return {
+        "name": "left_room",
+        "roomId": room_id,
+        "user": user
+    }

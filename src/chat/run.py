@@ -6,37 +6,58 @@ import pathlib
 import ssl
 import websockets
 import threading
+import logging
 
 from socket_handlers import join_single_room, message, leave_single_room,\
-    close, heartbeat, delete_message
+    close, heartbeat, delete_message, login, kick_user
 
 from connections import connections
 from connection import Connection
 from cfg import REDIS_URL, redis_client
 from redis_handlers import message_handler
 from task import ghost_buster
+from common.permission import PermissionException
 
 # when it's single server websocket, we can keep reference to each socket
 # in a dictionary in memory or use redis server;
 # when it's multiple servers, have to use redis to save each room's chat history,
 # more importantly, subscribe to room message events.
 
+logger = logging.getLogger(__name__)
+
 
 def handle_event(connection, data):
     action = data['action']
     data = data['data']
-    res = 'no handler for ' + action
 
-    if action == 'heartbeat':
-        res = heartbeat.handle(connection, data)
-    if action == 'join_single':
-        res = join_single_room.handle(connection, data)
-    if action == 'leave_single':
-        res = leave_single_room.handle(connection, data)
-    if action == 'message':
-        res = message.handle(connection, data)
-    if action == 'delete_message':
-        res = delete_message.handle(connection, data)
+    room_id = data.get('roomId')
+    res = {
+        "error": 'no_handler',
+        "name": action,
+        "roomId": room_id
+    }
+    try:
+        if action == 'login':
+            res = login.handle(connection, data)
+        if action == 'heartbeat':
+            res = heartbeat.handle(connection, data)
+        if action == 'join_room':
+            res = join_single_room.handle(connection, data)
+        if action == 'leave_room':
+            res = leave_single_room.handle(connection, data)
+        if action == 'message':
+            res = message.handle(connection, data)
+        if action == 'delete_message':
+            res = delete_message.handle(connection, data)
+        if action == 'kick_user':
+            res = kick_user.handle(connection, data)
+
+    except PermissionException:
+        logger.error('permission error')
+        res["error"] = 'forbidden'
+    except Exception:
+        logger.exception('exception not handled')
+        res["error"] = 'server_error'
 
     res = json.dumps(res)
     return res

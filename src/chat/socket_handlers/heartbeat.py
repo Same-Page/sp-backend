@@ -14,9 +14,11 @@ def handle(connection, data):
     and still connected to the room
 
     Meanwhile, it tells client that the connection is fine, if server
-    doesn't see this connection in the room, it could try to add it.
-    But that complicates the logic, tell client connection is not found
-    in the room and let client handle it.
+    doesn't see this connection in the room, this handler should not
+    try to join user. Let client handle it. Maybe client is kicked out
+    on purpose.
+
+    TODO: may need non-room heartbeat too
     """
 
     room_id = data['roomId']

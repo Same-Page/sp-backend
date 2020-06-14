@@ -7,7 +7,11 @@ from cfg import API_URL
 logger = logging.getLogger(__name__)
 
 
-def has_permission(action, room_id, token):
+class PermissionException(Exception):
+    pass
+
+
+def has_permission(action, token, room_id):
     headers = {
         "token": token
     }
@@ -22,3 +26,9 @@ def has_permission(action, room_id, token):
         logger.exception(e)
         return False
     return resp.ok
+
+
+def check_permission(action, token, room_id=None):
+    allow = has_permission(action, token, room_id)
+    if not allow:
+        raise PermissionException('sp permission error')

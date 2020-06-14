@@ -20,6 +20,7 @@ class Connection:
         await self.socket.send(json.dumps(data))
 
     def join_room(self, room_id):
+        # TODO: room_ids is not tracked when user is kicked
         self.room_ids.append(room_id)
 
     def leave_room(self, room_id):

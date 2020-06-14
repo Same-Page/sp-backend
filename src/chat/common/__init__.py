@@ -47,12 +47,17 @@ def save_room_messages(room_id, chat_history):
 
 
 def get_user(token):
+    # TBD: it's faster to call redis cache directly
+    # not sure if there will be any logic we want to
+    # keep in the get endpoint; also maybe api and
+    # socket won't share the same cache
     if not token:
         return None
     headers = {
         "token": token
     }
     resp = requests.get(f"{API_URL}/api/v1/user", headers=headers)
+
     if resp.ok:
         return resp.json()
     return None

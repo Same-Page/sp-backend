@@ -4,6 +4,7 @@ from sqlalchemy import desc, text
 import json
 
 from models.room import Room
+from models.user import User
 from models.site_to_room import SiteToRoom
 from models.user import User
 from models import db
@@ -15,6 +16,31 @@ from cfg import redis_client
 room_api = Blueprint("Room", __name__)
 
 CREATE_ROOM_COST = 0
+
+# the GET endpoints are also using POST method because room id
+# is sometimes url
+
+
+def get_same_page_room(url):
+    return {
+        'id': url,
+        'color': '#52c41a',
+        'type': 'page',
+        'name': '同网页',
+        'cover': 'https://i7.pngflow.com/pngimage/676/782/png-night-sky-star-background-material-blue-night-sky-star-blue-poster-banner-clipart.png',
+        'about': '只有浏览当前网页的用户可以进入该房间。'
+    }
+
+
+def get_same_site_room(domain):
+    return {
+        'id': domain,
+        'type': 'site',
+        'name': '网站大厅',
+        'color': '#40a9ff',
+        'cover': 'https://dnsofx4sf31ab.cloudfront.net/00000_chat_upload/30-party.jpeg',
+        'about': '当前网站的所有用户都可以进入该房间。'
+    }
 
 
 @room_api.route("/api/v1/get_rooms", methods=["POST"])
@@ -35,22 +61,8 @@ def get_rooms(user=None):
     else:
         # Include same page and same site room
         rooms = [
-            RoomWithOwner({
-                'id': domain,
-                'type': 'site',
-                'name': '网站大厅',
-                'color': '#40a9ff',
-                'cover': 'https://dnsofx4sf31ab.cloudfront.net/00000_chat_upload/30-party.jpeg',
-                'about': '当前网站的所有用户都可以进入该房间。'
-            }).to_dict(),
-            RoomWithOwner({
-                'id': url,
-                'color': '#52c41a',
-                'type': 'page',
-                'name': '同网页',
-                'cover': 'https://i7.pngflow.com/pngimage/676/782/png-night-sky-star-background-material-blue-night-sky-star-blue-poster-banner-clipart.png',
-                'about': '只有浏览当前网页的用户可以进入该房间。'
-            }).to_dict()
+            RoomWithOwner(get_same_page_room(url)).to_dict(),
+            RoomWithOwner(get_same_site_room(domain)).to_dict()
         ]
     res = query.all()
 
@@ -65,9 +77,19 @@ def get_rooms(user=None):
     return jsonify(rooms)
 
 
-@room_api.route("/api/v1/room/<room_id>", methods=["GET"])
+@room_api.route("/api/v1/room", methods=["POST"])
 @get_user_from_token(required=False)
-def get_room(room_id, user=None):
+def get_room(user=None):
+    payload = request.get_json()
+
+    room_id = payload['roomId']
+    room_type = payload.get('roomType')
+
+    if room_type == 'page':
+        return jsonify(RoomWithOwner(get_same_page_room(room_id)).to_dict())
+    if room_type == 'site':
+        return jsonify(RoomWithOwner(get_same_site_room(room_id)).to_dict())
+
     room, user = db.session.query(Room, User).join(
         User).filter(Room.id == room_id).first()
 
@@ -82,13 +104,53 @@ def get_user_room_count(user_id):
     return room_count
 
 
+@room_api.route("/api/v1/room/<room_id>/blacklist", methods=["GET"])
+@get_user_from_token(required=True)
+def get_blacklist_user(room_id, user=None):
+    room = Room.query.filter_by(id=room_id).first()
+    res = []
+    if room.rules:
+        rules = json.loads(room.rules)
+        blacklist = rules.get('blacklist', [])
+        users = User.query.filter(User.id.in_(blacklist)).all()
+        res = [u.to_dict() for u in users]
+
+    return jsonify(res)
+
+
+@room_api.route("/api/v1/room/blacklist", methods=["POST"])
+@get_user_from_token(required=True)
+def blacklist_user(user=None):
+    payload = request.get_json()
+    room_id = payload["roomId"]
+    target_user_id = payload["userId"]
+    room = Room.query.filter_by(id=room_id).first()
+    if not (user['isMod'] or room.owner == user['id']):
+        return jsonify({'error': 'not your room'}), 403
+
+    if room.rules:
+        rules = json.loads(room.rules)
+    else:
+        rules = {
+            'blacklist': []
+        }
+
+    rules['blacklist'].append(target_user_id)
+
+    room.rules = json.dumps(rules)
+
+    db.session.commit()
+
+    return '', 200
+
+
 @room_api.route("/api/v1/room", methods=["PUT"])
 @get_user_from_token(required=True)
 def update_room(user=None):
     room_id = request.form.get("id")
 
     room = Room.query.filter_by(id=room_id).first()
-    if room.owner != user['id']:
+    if not (user['isMod'] or room.owner == user['id']):
         return jsonify({'error': 'not your room'}), 403
 
     update_room_model(room)

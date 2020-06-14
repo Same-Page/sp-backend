@@ -25,7 +25,19 @@ def has_permission(user=None):
     action = payload["action"]
 
     if action == 'join_room':
+        room_id = payload["room_id"]
+        room = Room.query.filter(Room.id == room_id).first()
+        if room and room.rules:
+            rules = json.loads(room.rules)
+            blacklist = rules.get('blacklist', [])
+            if user['id'] in blacklist:
+                return jsonify({"error": 'You are in blacklist of this room'}),  403
+
         return has_permission_response()
+
+    if action == 'kick_user':
+        return has_permission_response()
+
     if action == 'delete_message':
         room_id = payload["room_id"]
         room = Room.query.filter(Room.id == room_id).first()
@@ -37,4 +49,4 @@ def has_permission(user=None):
         else:
             return jsonify({"error": "room not found"}), 404
 
-    return 400
+    return 'action not defined', 400
