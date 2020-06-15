@@ -21,6 +21,9 @@ def has_permission(user=None):
     Insert new message and also get latest messages since offset,
     not just the message inserted
     """
+    if user['isMod']:
+        return has_permission_response()
+
     payload = request.get_json()
     action = payload["action"]
 
