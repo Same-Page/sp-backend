@@ -36,19 +36,20 @@ def handle(connection, data):
         user_in_room = [u for u in room['users']
                         if u['id'] == userId]
         if len(user_in_room) > 0:
+            target_user = user_in_room[0]
+            payload = {
+                'name': 'user_kicked',
+                "roomId": room_id,
+                'user':  target_user
+
+            }
+            redis_client.publish('sp', json.dumps(payload))
+            # broadcast before removing target user from room
+            # so target user also recevie broadcast
             users_in_room[:] = [u for u in room['users']
                                 if u['id'] != userId]
             upsert_room(room)
             res['success']: True
-
-            payload = {
-                'name': 'other_left',
-                "roomId": room_id,
-                'user':  user_in_room[0]
-
-            }
-            redis_client.publish('sp', json.dumps(payload))
-
         else:
             res['error'] = 'user_not_in_room'
     else:
