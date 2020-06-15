@@ -90,10 +90,10 @@ def get_room(user=None):
     if room_type == 'site':
         return jsonify(RoomWithOwner(get_same_site_room(room_id)).to_dict())
 
-    room, user = db.session.query(Room, User).join(
+    room, owner = db.session.query(Room, User).join(
         User).filter(Room.id == room_id).first()
 
-    room_with_owner = RoomWithOwner(room.to_dict(), user)
+    room_with_owner = RoomWithOwner(room.to_dict(), owner.to_dict())
     return jsonify(room_with_owner.to_dict())
 
 
@@ -109,11 +109,11 @@ def get_user_room_count(user_id):
 def get_blacklist_user(room_id, user=None):
     room = Room.query.filter_by(id=room_id).first()
     res = []
-    if room.rules:
-        rules = json.loads(room.rules)
-        blacklist = rules.get('blacklist', [])
-        users = User.query.filter(User.id.in_(blacklist)).all()
-        res = [u.to_dict() for u in users]
+    room_dict = room.to_dict()
+    blacklist = room_dict['blacklist']
+
+    users = User.query.filter(User.id.in_(blacklist)).all()
+    res = [u.to_dict() for u in users]
 
     return jsonify(res)
 
@@ -124,24 +124,35 @@ def blacklist_user(user=None):
     payload = request.get_json()
     room_id = payload["roomId"]
     target_user_id = payload["userId"]
-    room = Room.query.filter_by(id=room_id).first()
+    add_to_blacklist = payload['add']
+    room, owner = db.session.query(Room, User).join(
+        User).filter(Room.id == room_id).first()
+
     if not (user['isMod'] or room.owner == user['id']):
         return jsonify({'error': 'not your room'}), 403
+    room_dict = room.to_dict()
+    blacklist = room_dict['blacklist']
+    if add_to_blacklist:
+        blacklist.append(target_user_id)
+    else:
+        blacklist = [
+            userId for userId in blacklist if userId != target_user_id]
 
     if room.rules:
         rules = json.loads(room.rules)
     else:
-        rules = {
-            'blacklist': []
-        }
-
-    rules['blacklist'].append(target_user_id)
+        rules = {}
+    # dedup
+    blacklist = list(set(blacklist))
+    rules['blacklist'] = blacklist
 
     room.rules = json.dumps(rules)
 
     db.session.commit()
 
-    return '', 200
+    room_with_owner = RoomWithOwner(room.to_dict(), owner.to_dict())
+
+    return jsonify(room_with_owner.to_dict())
 
 
 @room_api.route("/api/v1/room", methods=["PUT"])

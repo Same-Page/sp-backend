@@ -1,6 +1,7 @@
 import datetime
 import re
 import logging
+import json
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 
@@ -35,12 +36,17 @@ class Room(db.Model):
         if self.background:
             bg = f"{cloud_front}/00000_room/{self.id}-bg.jpg?v={self.background}"
 
+        blacklist = []
+        if self.rules:
+            rules_dict = json.loads(self.rules)
+            blacklist = rules_dict.get('blacklist', [])
         return {
             "id": self.id,
             "owner": self.owner,
             "name": self.name,
             "about": self.about,
-            "rules": self.rules,
+            # "rules": self.rules,
+            "blacklist": blacklist,  # should this be public to all users?
             "active": self.active,
             "background": bg,
             "cover": cover,
