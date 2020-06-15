@@ -130,17 +130,24 @@ def handle(connection, data):
     Client tell room id,
     broadcast to that room
     """
-
+    user = connection.user
     message_id = data['id']
     room_id = data['roomId']
+    room = get_room(room_id)
 
-    # TODO: sanitize input!!!!!!
-    content = get_content(data['content'])
+    if room:
+        # Check user is in room or not, might be kicked or blacklisted
+        user_ids_in_room = [u['id'] for u in room['users']]
+        if user['id'] not in user_ids_in_room:
+            return {
+                'error': 'user_not_in_room',
+                'roomId': room_id
+            }
 
-    # get sender from token get_user(data.get('token'))
-    user = connection.user
-    sender = get_sender_basic_info(user)
-    if sender:
+         # TODO: sanitize input!!!!!!
+        content = get_content(data['content'])
+
+        sender = get_sender_basic_info(user)
 
         # sometimes sender's connection isn't in the room
         # add it to room first? Better to fix the source of bug then patching here..

@@ -10,8 +10,12 @@ logger = logging.getLogger(__name__)
 
 def ghost_buster():
     while True:
-        kill_ghost_connections()
-        time.sleep(10)
+        try:
+            kill_ghost_connections()
+
+        except Exception as e:
+            logger.exception('ghost_buster exception')
+        time.sleep(20)
 
 
 def kill_ghost_connections():
