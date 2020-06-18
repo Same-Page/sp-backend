@@ -77,7 +77,7 @@ def get_rooms(user=None):
     return jsonify(rooms)
 
 
-@room_api.route("/api/v1/room", methods=["POST"])
+@room_api.route("/api/v1/get_room", methods=["POST"])
 @get_user_from_token(required=False)
 def get_room(user=None):
     payload = request.get_json()
