@@ -82,13 +82,29 @@ start_server = websockets.serve(
     run, "0.0.0.0", 8765
 )
 
+redis_thread = None
+
+
+def subscribe_to_redis_event():
+    # TODO: try sqs for better stability
+    global redis_thread
+    if redis_thread and redis_thread.is_alive():
+        # logger.debug('redis listener is healthy')
+        pass
+    else:
+        try:
+            logger.info('register redis listener')
+            redis_message_subscriber = redis_client.pubsub()
+            redis_message_subscriber.subscribe(**{'sp': message_handler})
+            redis_thread = redis_message_subscriber.run_in_thread(sleep_time=3)
+        except:
+            logger.exception('register redis listener failed')
+
+    threading.Timer(10, subscribe_to_redis_event).start()
+
 
 if REDIS_URL:
-    redis_message_subscriber = redis_client.pubsub()
-
-    redis_message_subscriber.subscribe(**{'sp': message_handler})
-    thread = redis_message_subscriber.run_in_thread(sleep_time=3)
-
+    subscribe_to_redis_event()
 else:
 
     def publish_mock(channel, data):

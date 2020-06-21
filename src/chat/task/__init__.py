@@ -40,7 +40,7 @@ def kill_ghost_connections():
                     if time_elapse > HEARTBEAT_TIMOUT:
                         connection_id = connection['id']
                         logger.info(
-                            f'ghost connection {connection_id} will be removed')
+                            f'[{key}] ghost connection {connection_id} will be removed')
                         connection_ids_to_be_removed.append(connection_id)
 
                 user['connections'] = [c for c in user['connections']
@@ -54,7 +54,7 @@ def kill_ghost_connections():
                              if u['id'] not in user_ids_to_be_removed]
 
             if len(room['users']) == 0:
-                logger.info(f'ghost room {room["id"]} will be removed')
+                logger.info(f'ghost room {key} will be removed')
                 redis_client.delete(key)
             else:
                 if len(connection_ids_to_be_removed) > 0:
