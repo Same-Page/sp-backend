@@ -13,7 +13,7 @@ from socket_handlers import join_single_room, message, leave_single_room,\
 
 from connections import connections
 from connection import Connection
-from cfg import REDIS_URL, redis_client
+from cfg import REDIS_URL, redis_client, SSL
 from redis_handlers import message_handler
 from task import ghost_buster
 from common.permission import PermissionException
@@ -78,9 +78,22 @@ async def run(websocket, path):
             close.handle(connection)
             break
 
-start_server = websockets.serve(
-    run, "0.0.0.0", 8765
-)
+if SSL:
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    localhost_pem = pathlib.Path(__file__).with_name(
+        "local_cert.pem")
+    localhost_key_pem = pathlib.Path(__file__).with_name("key.pem")
+    ssl_context.load_cert_chain(localhost_pem, keyfile=localhost_key_pem)
+
+    start_server = websockets.serve(
+        run, "0.0.0.0", 8765,
+        ssl=ssl_context
+    )
+else:
+    start_server = websockets.serve(
+        run, "0.0.0.0", 8765
+    )
+
 
 redis_thread = None
 

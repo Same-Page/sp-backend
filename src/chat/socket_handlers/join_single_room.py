@@ -41,6 +41,8 @@ Data in cache
 """
 ACTION_NAME = "join_room"
 
+logger = logging.getLogger(__name__)
+
 
 def build_room_connection(connection_id):
     return {
@@ -102,9 +104,12 @@ def join_room(connection, user, room_id):
                 # TODO: should tell client about this
                 return room
             user_connections.append(build_room_connection(connection.id))
-            existing_user['connections'] = user_connections[-MAX_USER_CONNECTION:]
-            # TODO: tell the connection client it's removed due to max connection limit
-            # so UI would show disconnected
+            if len(user_connections) > MAX_USER_CONNECTION:
+                logger.info(
+                    f"[{room_id}] {user['id']}'s connection has reached limit")
+                user_connections[:] = user_connections[-MAX_USER_CONNECTION:]
+                # TODO: tell the connection client it's removed due to max connection limit
+                # so UI would show disconnected
         else:
             new_user = build_room_user_from_user_data(user, connection.id)
 

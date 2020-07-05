@@ -18,6 +18,7 @@ HEARTBEAT_TIMOUT = os.environ.get('HEARTBEAT_TIMOUT', 60)
 
 API_URL = os.environ.get('API_URL', "http://localhost:8080")
 REDIS_URL = os.environ.get('REDIS_URL')
+SSL = os.environ.get('SSL')
 
 if REDIS_URL:
     # could use a different redis server for chat history if needed
