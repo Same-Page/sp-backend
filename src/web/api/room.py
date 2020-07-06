@@ -15,7 +15,7 @@ from cfg import redis_client
 
 room_api = Blueprint("Room", __name__)
 
-CREATE_ROOM_COST = 0
+CREATE_ROOM_COST = 10
 
 # the GET endpoints are also using POST method because room id
 # is sometimes url
