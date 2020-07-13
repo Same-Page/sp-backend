@@ -51,6 +51,8 @@ def check_content_type(content, declared_type):
     if any(media_type in content.lower() for media_type in media_types):
         return 'media'
 
+    if declared_type == 'file':
+        return 'file'
     # Youtube urls are handled above already
     # check for urls
     if content.lower().startswith('http'):
