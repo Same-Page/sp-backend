@@ -83,6 +83,7 @@ def get_content(payload):
     """
     Not relying on client entirely, when client send type = text/file,
     it could turn out to be media (image, sound, video);
+    # TODO: unit test this function thoroughly!
     """
 
     declared_type = payload['type']
@@ -113,6 +114,8 @@ def get_content(payload):
                 "value": payload['url'],
             }
     elif declared_type == 'url':
+        # TODO: this should be call page share or something
+        # page title is required from client for this case
         url = payload['url']
         iframe_url = url
         if 'bilibili.com/video/av' in url.lower():
