@@ -38,6 +38,6 @@ soupsieve==1.9.5
 toml==0.10.0
 typed-ast==1.4.0
 urllib3==1.25.7
-websockets==8.1
+websockets==9.1
 Werkzeug==1.0.0
 wrapt==1.11.2
